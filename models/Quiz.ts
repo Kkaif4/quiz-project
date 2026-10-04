@@ -130,6 +130,8 @@ const QuizSchema = new Schema<IQuiz>(
   },
 );
 
+QuizSchema.index({ status: 1, updatedAt: -1 });
+
 export const Quiz: Model<IQuiz> =
   (mongoose.models.Quiz as Model<IQuiz>) ||
   mongoose.model<IQuiz>("Quiz", QuizSchema);

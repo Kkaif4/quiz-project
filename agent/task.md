@@ -1,8 +1,8 @@
 # Task Execution & Progress Tracker (`task.md`)
 
-> **Document Version**: `v1.4.0`  
+> **Document Version**: `v1.5.0`  
 > **Last Updated**: `2026-10-05`  
-> **Active Phase**: `Phase 8: Browser Blueprint User Identification & Creator Name Flow`  
+> **Active Phase**: `Phase 9: Comprehensive SEO & Google Search Indexing Architecture`  
 > **Rule for Agents**: Update this file immediately after completing or beginning any task. Increment version (`v1.0.1`, `v1.1.0`) when phases or major milestones change.
 
 ---
@@ -20,8 +20,9 @@
 | **Phase 6**   | Viral Polish & Verification Checklist          | **P2 / P0** | ✅ `COMPLETED` | 3 / 3           |
 | **Phase 7**   | Performance Incident & Vercel Migration        | **P0 / P1** | ✅ `COMPLETED` | 8 / 8           |
 | **Phase 8**   | Browser Blueprint & Creator Identity           | **P0 / P1** | ✅ `COMPLETED` | 8 / 8           |
+| **Phase 9**   | SEO & Google Search Indexing Architecture      | **P0 / P1** | ✅ `COMPLETED` | 10 / 10         |
 
-**Total Progress**: `46 / 46 Tasks (100%)`
+**Total Progress**: `56 / 56 Tasks (100%)`
 
 ---
 
@@ -271,10 +272,53 @@
 
 ---
 
+### Phase 9: Comprehensive SEO & Google Search Indexing Architecture (P0 / P1)
+
+- [x] **TASK-901** `[P0]`: **Dynamic Origin Resolver & Layout Metadata Base (`lib/seo.ts` & `app/layout.tsx`)**
+  - Create `lib/seo.ts` with `getBaseUrl()` prioritizing `NEXT_PUBLIC_APP_URL`, `VERCEL_PROJECT_PRODUCTION_URL`, `VERCEL_URL`, falling back to `http://localhost:3000`.
+  - Update `app/layout.tsx` to set `metadataBase: new URL(getBaseUrl())`.
+  - Enrich global metadata with high-intent keywords, author, creator, publisher, and OpenGraph/Twitter cards.
+- [x] **TASK-902** `[P0]`: **Search Engine Directives Handler (`app/robots.ts` & `next.config.ts`)**
+  - Implement `app/robots.ts` returning Googlebot/Bingbot crawl rules: allow `/`, `/create`, `/q/`, `/api/og*`.
+  - Strictly disallow `/manage/*`, `/admin/*`, `/api/*`.
+  - Configure `X-Robots-Tag: noindex, nofollow, noarchive` headers in `next.config.ts` for `/manage/:path*` and `/admin/:path*`.
+- [x] **TASK-903** `[P0]`: **Dynamic XML Sitemap with ISR & Database Optimization (`app/sitemap.ts` & `models/Quiz.ts`)**
+  - Add compound index `{ status: 1, updatedAt: -1 }` on `QuizSchema` in `models/Quiz.ts`.
+  - Implement `app/sitemap.ts` with `revalidate = 3600` (1-hour edge ISR).
+  - Map static routes `/` (priority 1.0) and `/create` (priority 0.9).
+  - Lean query active quizzes (`status: 'active'`) with `.select("code updatedAt createdAt").sort({ updatedAt: -1 }).limit(10000).lean()`.
+  - Resilient `try/catch` fallback for offline/CI build environments.
+- [x] **TASK-904** `[P0]`: **Web App Manifest Handler (`app/manifest.ts`)**
+  - Implement `app/manifest.ts` returning `MetadataRoute.Manifest` with brand tokens, `#8B5CF6` theme color, `#080816` background, and icons.
+- [x] **TASK-905** `[P0]`: **Reusable Sanitized JSON-LD Component (`components/seo/JsonLd.tsx`)**
+  - Create type-safe Server Component `<JsonLd<T> />` with `<` characters escaped to `\u003c` to neutralize stored XSS vectors.
+- [x] **TASK-906** `[P0]`: **Landing Page Structured Data & Semantic Cleanup (`app/page.tsx` & `components/home/FaqSection.tsx`)**
+  - Fix semantic hierarchy in `app/page.tsx`: replace mock question `<h2>` with semantic `<p>`.
+  - Add `components/home/FaqSection.tsx` with accessible `<details>/<summary>` accordion.
+  - Add "How It Works in 3 Steps" semantic `<h2>`/`<h3>` block.
+  - Inject `WebSite`, `WebApplication`, `FAQPage`, and `BreadcrumbList` schemas via `<JsonLd />`.
+  - Set `alternates: { canonical: "/" }` and high-CTR titles/descriptions.
+- [x] **TASK-907** `[P0]`: **Quiz Play Page Zero-Leakage Structured Data & Canonicals (`app/q/[quizCode]/page.tsx`)**
+  - In `generateMetadata`, add `alternates: { canonical: `/q/${quizCode}` }`.
+  - Inject `Quiz` Schema and `BreadcrumbList` in `QuizPage`.
+  - CRITICAL SECURITY INVARIANT: Populate `hasPart` with question prompts and `suggestedAnswer` options only. Never include `acceptedAnswer` or `correctOptionId`.
+- [x] **TASK-908** `[P1]`: **Result Page Canonical Consolidation & Noindex Directives (`app/q/[quizCode]/result/[attemptCode]/page.tsx`)**
+  - Set `alternates: { canonical: `/q/${quizCode}` }` to consolidate link equity to the root quiz.
+  - Set `robots: { index: false, follow: true, noarchive: true }` to avoid crawl budget exhaustion.
+- [x] **TASK-909** `[P0]`: **Owner & Admin Capability URL Search Cloaking (`app/manage/[ownerToken]/layout.tsx` & `app/admin/layout.tsx`)**
+  - Create Server Component `app/admin/layout.tsx` enforcing `robots: { index: false, follow: false, noarchive: true }`.
+  - Create Server Component `app/manage/[ownerToken]/layout.tsx` enforcing `robots: { index: false, follow: false, noarchive: true }`.
+- [x] **TASK-910** `[P0]`: **Comprehensive Verification, Automated Tests & Schema Validation (`tests/seo.test.ts`)**
+  - Create automated test suite `tests/seo.test.ts` testing robots, sitemap, JSON-LD escaping, zero answer key leakage, canonical tags, and noindex headers.
+  - Verify clean `npm run lint` and `npm run build`.
+
+---
+
 ## 3. Version History & Changelog
 
 | Version  | Date         | Changes Summary                                                                                                                                                                                                                                                       |
 | :------- | :----------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `v1.5.0` | `2026-10-05` | Added Phase 9: Comprehensive SEO & Google Search Indexing Architecture (TASK-901 through TASK-910). Adding dynamic sitemap with 1h ISR, robots.txt, PWA manifest, XSS-safe JSON-LD, zero-leakage Quiz schema, FAQ accordion, canonical tags, and cloaking layouts. |
 | `v1.4.0` | `2026-10-05` | Added Phase 8: Browser Blueprint User Identification & Creator Name Flow (TASK-801 through TASK-808). Added zero-dependency Web Crypto fingerprinting, activated User model with salted IP hashing, mandatory creator name in QuizCreator, and returning user recovery. |
 | `v1.3.0` | `2026-10-05` | Added Phase 7: Performance Incident & Vercel Migration Optimization (TASK-701 through TASK-708). Pivoting from Cloudflare Workers to Vercel, stripping DoH DNS overhead, adding React.cache deduplication, eliminating 2.4MB asset bloat, and streaming SSR.           |
 | `v1.2.0` | `2026-10-02` | Completed Phase 6: Dynamic OG metadata & /api/og generator (TASK-601), route loading skeletons & error boundaries (TASK-602), full end-to-end verification loop (TASK-603), and Cloudflare Workers DoH SRV resolution fix (ADR-010). All 30/30 tasks complete (100%). |

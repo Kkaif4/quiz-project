@@ -231,6 +231,7 @@ UserSchema.index({ clientFingerprint: 1, ipHash: 1 });
 | `quizzes`  | `code`                                    | Unique   | Public URL lookup (`/q/:code`)                    |
 | `quizzes`  | `ownerTokenHash`                          | Unique   | Private owner dashboard lookup (`/manage/:token`) |
 | `quizzes`  | `status`                                  | Standard | Filter out disabled quizzes                       |
+| `quizzes`  | `{ status: 1, updatedAt: -1 }`            | Compound | Fast, indexed XML sitemap generation (<5ms)       |
 | `quizzes`  | `ownerId`                                 | Standard | User quiz ownership & returning recovery queries  |
 | `users`    | `clientFingerprint`                       | Sparse   | Fast device blueprint lookup (`/api/users/identify`) |
 | `users`    | `ipHash`                                  | Sparse   | Network locality lookup                           |

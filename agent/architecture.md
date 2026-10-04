@@ -34,6 +34,7 @@ Lemon Quiz is a lightweight, viral, full-stack Next.js application built to deli
 ```
 
 ### Architectural Principles
+
 1. **Monolithic Simplicity**: Single repository, single framework (Next.js), single database (MongoDB). No Redis, microservices, background message queues, or WebSockets for the MVP.
 2. **Sessionless Ownership**: No passwords, emails, or OAuth walls required to create a quiz. Ownership is established via cryptographically secure random tokens.
 3. **Server-Side Authority**: The client is never trusted to calculate scores or verify answers. The answer key is never transmitted across the wire to players.
@@ -43,16 +44,16 @@ Lemon Quiz is a lightweight, viral, full-stack Next.js application built to deli
 
 ## 2. Technology Stack
 
-| Layer | Technology | Rationale |
-| :--- | :--- | :--- |
-| **Framework** | Next.js 16 (Canary) / React 19 | App Router, Server Components, async request handling |
-| **Styling** | Tailwind CSS v4 | Rapid utility styling, custom typography, zero runtime CSS |
-| **Database** | MongoDB Atlas via Mongoose | Flexible document schema, seamless question embedding |
-| **Validation** | Zod | Runtime schema validation for requests and models |
-| **Security** | Node.js `crypto` | SHA-256 token and IP hashing, high-entropy tokens |
-| **Rate Limiting**| In-Memory Sliding Window (LRU) | Zero-dependency IP rate limiting for single-node / MVP |
-| **Icons** | Lucide React | Sharp vector iconography, zero cheap system OS emojis |
-| **Effects** | `canvas-confetti` | High-performance canvas particle celebrations |
+| Layer             | Technology                     | Rationale                                                  |
+| :---------------- | :----------------------------- | :--------------------------------------------------------- |
+| **Framework**     | Next.js 16 (Canary) / React 19 | App Router, Server Components, async request handling      |
+| **Styling**       | Tailwind CSS v4                | Rapid utility styling, custom typography, zero runtime CSS |
+| **Database**      | MongoDB Atlas via Mongoose     | Flexible document schema, seamless question embedding      |
+| **Validation**    | Zod                            | Runtime schema validation for requests and models          |
+| **Security**      | Node.js `crypto`               | SHA-256 token and IP hashing, high-entropy tokens          |
+| **Rate Limiting** | In-Memory Sliding Window (LRU) | Zero-dependency IP rate limiting for single-node / MVP     |
+| **Icons**         | Lucide React                   | Sharp vector iconography, zero cheap system OS emojis      |
+| **Effects**       | `canvas-confetti`              | High-performance canvas particle celebrations              |
 
 ---
 
@@ -157,24 +158,51 @@ lemon-quiz-meniac/
 │   ├── RULES.md            # Non-negotiable AI rulebook
 │   └── task.md             # Versioned task tracker
 ├── app/                    # Next.js 16 App Router
+│   ├── admin/              # Moderation console with search-cloaking layout
 │   ├── api/                # API Route Handlers
-│   ├── create/             # Quiz creator view
-│   ├── manage/             # Owner dashboard view
-│   ├── q/                  # Public quiz & result view
-│   └── page.tsx            # Home & My Quizzes hub
+│   ├── create/             # Quiz creator view with canonical tag
+│   ├── manage/             # Owner dashboard view with search-cloaking layout
+│   ├── q/                  # Public quiz & result view with canonical tags
+│   ├── manifest.ts         # Native Web App Manifest (/manifest.webmanifest)
+│   ├── robots.ts           # Dynamic search crawler directives (/robots.txt)
+│   ├── sitemap.ts          # Dynamic XML sitemap with 1h edge ISR (/sitemap.xml)
+│   └── page.tsx            # Home page with WebSite, WebApp & FAQPage JSON-LD
 ├── components/             # React 19 UI components
 │   ├── dashboard/          # Owner stats, rankings, lists
+│   ├── home/               # FAQ accordion (FaqSection.tsx)
 │   ├── quiz/               # Creator, player, result, share card
+│   ├── seo/                # Sanitized Schema.org JSON-LD component (JsonLd.tsx)
 │   └── ui/                 # Reusable buttons, badges, inputs
 ├── lib/                    # Shared server & client utilities
 │   ├── db.ts               # Mongoose connection singleton
+│   ├── fingerprint.ts      # Native Web Crypto browser blueprint engine
 │   ├── rate-limit.ts       # Sliding window rate limiter
+│   ├── seo.ts              # Authoritative origin resolver & baseUrl normalization
 │   ├── tokens.ts           # Token generation & hashing
 │   └── validation.ts       # Zod schemas
 ├── models/                 # Mongoose schemas & models
 │   ├── Attempt.ts
-│   ├── Quiz.ts
+│   ├── Quiz.ts             # Indexed with compound { status: 1, updatedAt: -1 }
 │   ├── Report.ts
 │   └── User.ts
 └── types/                  # Strict TypeScript interfaces
 ```
+
+---
+
+## 7. SEO & Search Engine Indexing Infrastructure
+
+1. **Dynamic Metadata Route Handlers**:
+   - `app/sitemap.ts`: Dynamic XML sitemap indexing static routes (`/`, `/create`) and active public quizzes (`/q/[quizCode]`) with 1-hour ISR (`revalidate = 3600`).
+   - `app/robots.ts`: Rules explicitly allowing `/`, `/create`, `/q/`, `/api/og*` while strictly blocking capability URLs (`/manage/*`, `/admin/*`, `/api/*`).
+   - `app/manifest.ts`: Native PWA manifest with brand tokens for Google mobile search installability.
+2. **Zero-Leakage Structured Data (Schema.org JSON-LD)**:
+   - Type-safe, XSS-escaped Server Component `components/seo/JsonLd.tsx` converts `<` to `\u003c`.
+   - Landing page embeds `WebSite`, `WebApplication`, `FAQPage`, and `BreadcrumbList`.
+   - Quiz pages (`/q/[quizCode]`) embed `Quiz` schema with question prompts and `suggestedAnswer` options. **Never outputs `acceptedAnswer` or `correctOptionId`**.
+3. **Canonicalization & Equity Consolidation**:
+   - Global `metadataBase` configured with authoritative `getBaseUrl()`.
+   - Result pages (`/q/[quizCode]/result/[attemptCode]`) canonicalize to parent quiz `/q/[quizCode]` with `robots: { index: false, follow: true, noarchive: true }`.
+4. **Defense-in-Depth Search Cloaking**:
+   - Layouts `app/admin/layout.tsx` and `app/manage/[ownerToken]/layout.tsx` enforce `robots: { index: false, follow: false, noarchive: true }`.
+   - `next.config.ts` injects `X-Robots-Tag: noindex, nofollow, noarchive` on `/manage/:path*` and `/admin/:path*`.

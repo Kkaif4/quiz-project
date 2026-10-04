@@ -173,4 +173,25 @@
   - *Positive*: Zero-friction identity with 0 drop-off; no passwords or emails required; seamless returning user recognition across browser restarts; prevents collisions on shared school/dorm Wi-Fi networks by using client-side canvas/hardware fingerprint as primary key; 100% compliant with zero-PII privacy rules.
   - *Negative*: Device switches (e.g. phone to desktop) still require sharing the `/manage/:ownerToken` capability URL unless accounts are linked post-MVP.
 
+---
+
+### ADR-013: Comprehensive SEO, Search Engine Indexing & Zero-Leakage Structured Data Architecture
+
+- **Status**: Accepted
+- **Context**: While peer-to-peer social sharing (WhatsApp, Instagram Stories, Snapchat) drives initial viral loops, capturing organic high-intent search queries ("friendship quiz 2026", "bff test", "how well do your friends know you") represents an immense viral acquisition channel. However, search indexing must balance Googlebot discovery with two non-negotiable security constraints: (1) Capability URLs (`/manage/[ownerToken]`) and moderation surfaces (`/admin/reports`) must NEVER be crawled or indexed, and (2) Public Schema.org structured data (`Quiz` schema) must NEVER expose answer keys (`acceptedAnswer` or `correctOptionId`), which would allow players to inspect page source to cheat.
+- **Decision**:
+  1. *Metadata Route Handlers*: Implement native Next.js 16 App Router route handlers:
+     - `app/sitemap.ts`: Dynamic XML sitemap indexing static routes (`/`, `/create`) and active public quizzes (`/q/[quizCode]`) with 1-hour ISR caching (`revalidate = 3600`) and compound indexed queries (`{ status: 1, updatedAt: -1 }`). Fallbacks gracefully in offline CI environments.
+     - `app/robots.ts`: Rules explicitly allowing public viral paths (`/`, `/create`, `/q/`, `/api/og*`) while strictly disallowing private capability URLs (`/manage/*`, `/admin/*`, `/api/*`).
+     - `app/manifest.ts`: Native PWA manifest for Google mobile indexing with brand theme `#8B5CF6`.
+  2. *Defense-in-Depth Search Cloaking*: Beyond `robots.txt`, dedicated Server Component layouts (`app/manage/[ownerToken]/layout.tsx` and `app/admin/layout.tsx`) enforce `robots: { index: false, follow: false, noarchive: true }`. Furthermore, `next.config.ts` injects HTTP response headers `X-Robots-Tag: noindex, nofollow, noarchive` for `/manage/:path*` and `/admin/:path*`.
+  3. *Type-Safe & Sanitized JSON-LD Component (`components/seo/JsonLd.tsx`)*: Render Schema.org structured data on the server with raw `<` characters escaped to `\u003c` to neutralize stored XSS attack vectors.
+  4. *Zero-Leakage Structured Data Invariant*: In `app/q/[quizCode]/page.tsx`, `Quiz` Schema includes question text and option choices inside `suggestedAnswer`. `acceptedAnswer` and `correctOptionId` are strictly excluded, preserving game integrity.
+  5. *Link Equity Consolidation*: Result pages (`/q/[quizCode]/result/[attemptCode]`) specify `alternates: { canonical: "/q/[quizCode]" }` and `robots: { index: false, follow: true, noarchive: true }`, directing all crawler equity to the root quiz and avoiding crawl budget exhaustion.
+  6. *Dynamic Origin Resolution (`lib/seo.ts`)*: Normalize canonical URLs and `metadataBase` across local development, Vercel preview, and production domains, trimming all trailing slashes.
+- **Consequences**:
+  - *Positive*: Maximizes Google SERP organic traffic with Rich Snippets (FAQ accordions, WebSite search action, Quiz badges); guarantees zero leakage of answer keys or owner capability tokens; protects crawl budget.
+  - *Negative*: Result score pages are not indexed individually in Google Search (by design, to avoid duplicate content penalties).
+
+
 

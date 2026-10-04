@@ -10,15 +10,24 @@ import {
   Check,
   Plus,
   ShieldCheck,
+  PenLine,
+  Lock,
+  Send,
 } from "lucide-react";
 import { Suspense } from "react";
 import { getQuizzesByOwnerTokens } from "@/lib/quiz";
 import { MyQuizzesSection } from "@/components/dashboard/MyQuizzesSection";
+import { FaqSection, FAQ_ITEMS } from "@/components/home/FaqSection";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { getBaseUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "LemonQuiz — How Well Do Your Friends Really Know You?",
   description:
     "Create your personalized friendship test in 60 seconds, share with friends, and see who knows you best.",
+  alternates: {
+    canonical: "/",
+  },
 };
 
 /**
@@ -50,8 +59,73 @@ async function OwnerQuizzesLoader() {
 }
 
 export default function HomePage() {
+  const baseUrl = getBaseUrl();
+
+  const homepageSchema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${baseUrl}/#website`,
+        url: baseUrl,
+        name: "LemonQuiz",
+        description:
+          "The #1 friendship test and BFF challenge. Create your quiz in 60s and see how well friends know you.",
+        potentialAction: {
+          "@type": "SearchAction",
+          target: `${baseUrl}/q/{search_term_string}`,
+          "query-input": "required name=search_term_string",
+        },
+        inLanguage: "en-US",
+      },
+      {
+        "@type": "WebApplication",
+        "@id": `${baseUrl}/#webapp`,
+        name: "LemonQuiz Friendship Test",
+        url: baseUrl,
+        applicationCategory: "GameApplication",
+        operatingSystem: "All",
+        browserRequirements: "Requires modern web browser with HTML5 support",
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
+        },
+        description:
+          "Fast, free friendship quiz generator. Create personalized 60-second trivia tests for friends and view real-time leaderboards.",
+      },
+      {
+        "@type": "FAQPage",
+        "@id": `${baseUrl}/#faq`,
+        mainEntity: FAQ_ITEMS.map((item) => ({
+          "@type": "Question",
+          name: item.question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: item.answer,
+          },
+        })),
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${baseUrl}/#breadcrumb`,
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: baseUrl,
+          },
+        ],
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen text-[var(--text-primary)] flex flex-col">
+      {/* Search Engine Structured Data */}
+      <JsonLd data={homepageSchema} />
+
       {/* Navigation Header */}
       <header className="sticky top-0 z-30 bg-[var(--bg-primary)]/80 backdrop-blur-md border-b border-[var(--border-subtle)]">
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -131,9 +205,10 @@ export default function HomePage() {
               </span>
             </div>
 
-            <h2 className="text-xl sm:text-2xl font-black text-[var(--text-primary)] leading-snug">
+            {/* Semantic Paragraph instead of h2 to preserve document hierarchy */}
+            <p className="text-xl sm:text-2xl font-black text-[var(--text-primary)] leading-snug">
               What is my absolute go-to comfort food late at night?
-            </h2>
+            </p>
 
             <div className="space-y-2.5 pt-1">
               <div className="p-4 rounded-2xl border-2 border-violet-500 bg-violet-500/20 flex items-center justify-between font-semibold text-sm sm:text-base text-[var(--text-primary)] shadow-xs glow-purple">
@@ -172,15 +247,71 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* How to Create in 3 Simple Steps */}
+        <section className="space-y-6 pt-4">
+          <div className="text-center space-y-1">
+            <span className="text-xs font-bold text-violet-400 uppercase tracking-widest block">
+              Easy 60-Second Setup
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight">
+              How to Create Your Friendship Test in 3 Simple Steps
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Step 1 */}
+            <div className="card-surface rounded-3xl p-6 space-y-3 shadow-xs">
+              <div className="w-12 h-12 rounded-2xl bg-violet-500/15 border border-violet-500/30 flex items-center justify-center text-violet-400 shadow-xs">
+                <PenLine className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-black text-[var(--text-primary)]">
+                1. Pick or Write Questions
+              </h3>
+              <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] leading-relaxed">
+                Choose from our curated friendship templates or customize your
+                own questions about your pet peeves, dream spots, and secrets.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="card-surface rounded-3xl p-6 space-y-3 shadow-xs">
+              <div className="w-12 h-12 rounded-2xl bg-pink-500/15 border border-pink-500/30 flex items-center justify-center text-pink-400 shadow-xs">
+                <Lock className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-black text-[var(--text-primary)]">
+                2. Set Your Secret Answers
+              </h3>
+              <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] leading-relaxed">
+                Lock in the correct answers only you know. Scoring is encrypted
+                and verified server-side so nobody can cheat.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="card-surface rounded-3xl p-6 space-y-3 shadow-xs">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-xs">
+                <Send className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-black text-[var(--text-primary)]">
+                3. Drop Link in Group Chats
+              </h3>
+              <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] leading-relaxed">
+                Share your custom link or QR code to WhatsApp, Instagram
+                Stories, or Snapchat. Watch live scores roll in!
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* Feature Highlights Grid */}
         <section className="space-y-6 pt-4">
           <div className="text-center space-y-1">
-            <h2 className="text-xs font-bold text-violet-400 uppercase tracking-widest">
+            <span className="text-xs font-bold text-violet-400 uppercase tracking-widest block">
               Built for Close Friends
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight">
+              Why Close Friends Love LemonQuiz: Simple, Fast &amp; Ultra-Engaging
             </h2>
-            <h3 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight">
-              Simple, Fast &amp; Ultra-Engaging
-            </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -189,9 +320,9 @@ export default function HomePage() {
               <div className="w-12 h-12 rounded-2xl bg-violet-500/15 border border-violet-500/30 flex items-center justify-center text-violet-400 shadow-xs">
                 <Zap className="w-6 h-6" />
               </div>
-              <h4 className="text-base font-black text-[var(--text-primary)]">
+              <h3 className="text-base font-black text-[var(--text-primary)]">
                 Zero Login Required
-              </h4>
+              </h3>
               <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] leading-relaxed">
                 No accounts, no email verification, no passwords. Manage
                 everything with an anonymous, secure private link.
@@ -203,9 +334,9 @@ export default function HomePage() {
               <div className="w-12 h-12 rounded-2xl bg-pink-500/15 border border-pink-500/30 flex items-center justify-center text-pink-400 shadow-xs">
                 <Crown className="w-6 h-6" />
               </div>
-              <h4 className="text-base font-black text-[var(--text-primary)]">
+              <h3 className="text-base font-black text-[var(--text-primary)]">
                 Real-Time Leaderboard
-              </h4>
+              </h3>
               <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] leading-relaxed">
                 Rank your friends on a live podium. See scores, match
                 percentages, and question-by-question breakdown answers.
@@ -217,9 +348,9 @@ export default function HomePage() {
               <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-xs">
                 <Share2 className="w-6 h-6" />
               </div>
-              <h4 className="text-base font-black text-[var(--text-primary)]">
+              <h3 className="text-base font-black text-[var(--text-primary)]">
                 One-Click Social Sharing
-              </h4>
+              </h3>
               <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] leading-relaxed">
                 Instant WhatsApp invite pre-filling and scannable QR codes for
                 seamless Instagram Stories and group chat drops.
@@ -228,6 +359,9 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Frequently Asked Questions */}
+        <FaqSection />
+
         {/* Bottom Banner CTA */}
         <section className="card-surface rounded-3xl p-8 sm:p-10 text-center space-y-4 shadow-xl border border-violet-500/30 glow-purple">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/20 border border-violet-500/40 text-violet-300 text-xs font-bold">
@@ -235,9 +369,9 @@ export default function HomePage() {
             <span>Ready in under a minute</span>
           </div>
 
-          <h3 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight">
             Who in your squad actually knows you best?
-          </h3>
+          </h2>
 
           <p className="text-sm font-medium text-[var(--text-secondary)] max-w-md mx-auto">
             Pick a template, choose your secret answers, and watch your friends

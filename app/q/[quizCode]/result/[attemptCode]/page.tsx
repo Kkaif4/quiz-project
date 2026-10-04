@@ -22,6 +22,11 @@ export async function generateMetadata({
     return {
       title: "Result Not Found — LemonQuiz",
       description: "This quiz result does not exist or has expired.",
+      robots: {
+        index: false,
+        follow: false,
+        noarchive: true,
+      },
     };
   }
 
@@ -32,6 +37,16 @@ export async function generateMetadata({
   return {
     title,
     description,
+    // Consolidate link and ranking equity to root quiz
+    alternates: {
+      canonical: `/q/${quizCode}`,
+    },
+    // Prevent crawl budget exhaustion on unbounded individual results
+    robots: {
+      index: false,
+      follow: true,
+      noarchive: true,
+    },
     openGraph: {
       title,
       description,
@@ -92,7 +107,7 @@ export default async function ResultPage({ params }: ResultPageProps) {
 
       {/* Footer */}
       <footer className="py-4 text-center text-xs text-[var(--text-muted)] border-t border-[var(--border-subtle)]">
-        <span>LemonQuiz · The Ultimate Friendship Test</span>
+        <span>LemonQuiz &bull; The Ultimate Friendship Test</span>
       </footer>
     </div>
   );

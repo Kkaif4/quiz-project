@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   title: "Create a Friendship Quiz — LemonQuiz",
   description:
     "Create your personalized friendship test in 60 seconds, share with friends, and see who knows you best.",
+  alternates: {
+    canonical: "/create",
+  },
   openGraph: {
     title: "Create a Friendship Quiz — LemonQuiz",
     description:

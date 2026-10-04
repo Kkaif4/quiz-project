@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Sparkles, Plus } from "lucide-react";
 import { getPublicQuizByCode } from "@/lib/quiz";
 import { QuizPlayer } from "@/components/quiz/QuizPlayer";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { getBaseUrl } from "@/lib/seo";
 
 interface QuizPageProps {
   params: Promise<{ quizCode: string }>;
@@ -30,6 +32,9 @@ export async function generateMetadata({
   return {
     title: `${quiz.title} — LemonQuiz`,
     description,
+    alternates: {
+      canonical: `/q/${quizCode}`,
+    },
     openGraph: {
       title: `${quiz.title} — LemonQuiz`,
       description,
@@ -59,8 +64,65 @@ export default async function QuizPage({ params }: QuizPageProps) {
     notFound();
   }
 
+  const baseUrl = getBaseUrl();
+  const quizUrl = `${baseUrl}/q/${quiz.code}`;
+
+  // ZERO ANSWER KEY LEAKAGE SECURITY INVARIANT:
+  // hasPart provides questions and suggestedAnswer options only.
+  // acceptedAnswer and correctOptionId are NEVER emitted into JSON-LD.
+  const quizSchema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Quiz",
+        "@id": `${quizUrl}/#quiz`,
+        name: quiz.title,
+        description:
+          quiz.description ||
+          `Take this friendship quiz to see how well you know ${quiz.title}.`,
+        url: quizUrl,
+        learningResourceType: "Quiz",
+        educationalLevel: "All",
+        about: {
+          "@type": "Thing",
+          name: "Friendship Trivia",
+        },
+        hasPart: quiz.questions.map((q, idx) => ({
+          "@type": "Question",
+          name: q.text,
+          position: idx + 1,
+          suggestedAnswer: q.options.map((opt) => ({
+            "@type": "Answer",
+            text: opt.text,
+          })),
+        })),
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${quizUrl}/#breadcrumb`,
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: baseUrl,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: quiz.title,
+            item: quizUrl,
+          },
+        ],
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen text-[var(--text-primary)] flex flex-col justify-between">
+      {/* Quiz Structured Data (Zero Answer Leakage) */}
+      <JsonLd data={quizSchema} />
+
       {/* Top Navbar */}
       <header className="sticky top-0 z-30 bg-[var(--bg-primary)]/80 backdrop-blur-md border-b border-[var(--border-subtle)]">
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
