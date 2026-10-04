@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { connectToDatabase } from "@/lib/db";
 import { Quiz } from "@/models/Quiz";
+import { User } from "@/models/User";
 import { CreateQuizSchema } from "@/lib/validation";
 import {
   generateCode,
   generateOwnerToken,
   hashToken,
+  hashIp,
 } from "@/lib/tokens";
 import {
   quizCreateLimiter,
@@ -93,6 +95,7 @@ export async function POST(request: Request) {
 
     // 7. Sanitize saved strings to protect against XSS and control characters
     const sanitizedTitle = sanitizeText(validatedData.title);
+    const sanitizedCreatorName = sanitizeText(validatedData.creatorName);
     const sanitizedDescription = validatedData.description
       ? sanitizeText(validatedData.description)
       : "";
@@ -107,7 +110,38 @@ export async function POST(request: Request) {
       correctOptionId: q.correctOptionId,
     }));
 
-    // 8. Save Quiz document in MongoDB (direct insert with duplicate index retry)
+    // 8. Associate / Upsert User profile based on browser footprint
+    let user = null;
+    const clientFingerprint = validatedData.clientFingerprint?.trim() || "";
+    const ipHash = hashIp(clientIp);
+
+    try {
+      if (clientFingerprint) {
+        user = await User.findOneAndUpdate(
+          { clientFingerprint },
+          {
+            $set: {
+              name: sanitizedCreatorName,
+              ipHash,
+              lastSeenAt: new Date(),
+              status: "active",
+            },
+          },
+          { returnDocument: "after", upsert: true },
+        );
+      } else {
+        user = await User.create({
+          name: sanitizedCreatorName,
+          ipHash,
+          lastSeenAt: new Date(),
+          status: "active",
+        });
+      }
+    } catch (userErr) {
+      console.warn(`[QuizCreate:${reqId}] User profile creation warning:`, userErr);
+    }
+
+    // 9. Save Quiz document in MongoDB (direct insert with duplicate index retry)
     console.log(`[QuizCreate:${reqId}] Writing Quiz document to MongoDB...`);
     let createdQuiz = null;
     let retries = 0;
@@ -117,6 +151,7 @@ export async function POST(request: Request) {
         createdQuiz = await Quiz.create({
           code: quizCode,
           ownerTokenHash,
+          ownerId: user?._id ?? null,
           title: sanitizedTitle,
           description: sanitizedDescription,
           questions: sanitizedQuestions,
@@ -183,6 +218,12 @@ export async function POST(request: Request) {
       ownerToken,
       manageUrl: `/manage/${ownerToken}`,
       shareUrl: `/q/${quizCode}`,
+      user: user
+        ? {
+            id: user._id.toString(),
+            name: user.name,
+          }
+        : undefined,
     };
 
     const response = NextResponse.json(

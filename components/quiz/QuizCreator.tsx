@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Sparkles,
@@ -17,11 +17,13 @@ import {
   Pencil,
   Eye,
   Sliders,
+  User as UserIcon,
 } from "lucide-react";
 import { TEMPLATES, getTemplateById, type QuizTemplate } from "@/lib/templates";
 import { QuestionEditor, type QuestionEditorData } from "./QuestionEditor";
 import { cn } from "@/lib/utils";
 import type { QuizCreationResult } from "@/types/quiz";
+import { getBrowserFingerprint } from "@/lib/fingerprint";
 
 interface QuizCreatorProps {
   initialTemplateId?: string;
@@ -36,6 +38,12 @@ export function QuizCreator({ initialTemplateId }: QuizCreatorProps) {
   // Load initial template or default to "best-friends"
   const defaultTemplate =
     (initialTemplateId && getTemplateById(initialTemplateId)) || TEMPLATES[0];
+
+  // Creator identity & browser footprint state
+  const [creatorName, setCreatorName] = useState<string>("");
+  const [clientFingerprint, setClientFingerprint] = useState<string>("");
+  const [isIdentifiedUser, setIsIdentifiedUser] = useState<boolean>(false);
+  const [hasCustomizedTitle, setHasCustomizedTitle] = useState<boolean>(false);
 
   const [activeTemplateId, setActiveTemplateId] = useState<string>(
     defaultTemplate ? defaultTemplate.id : "best-friends",
@@ -82,6 +90,56 @@ export function QuizCreator({ initialTemplateId }: QuizCreatorProps) {
       correctOptionId: `opt_${Date.now()}_1`,
     };
   }
+
+  // Detect browser blueprint and pre-fill recognized creator name
+  useEffect(() => {
+    let isMounted = true;
+    async function detectBlueprint() {
+      try {
+        const fp = await getBrowserFingerprint();
+        if (!isMounted) return;
+        setClientFingerprint(fp);
+
+        if (fp) {
+          const res = await fetch("/api/users/identify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ clientFingerprint: fp }),
+          });
+          const data = await res.json();
+          if (isMounted && data.success && data.data?.user?.name) {
+            const userName = data.data.user.name;
+            setCreatorName(userName);
+            setIsIdentifiedUser(true);
+            setTitle((prev) =>
+              prev === "How Well Do You Know Me?" || !prev
+                ? `How Well Do You Know ${userName}?`
+                : prev,
+            );
+          }
+        }
+      } catch (err) {
+        console.warn("Could not identify user blueprint on creator mount:", err);
+      }
+    }
+    detectBlueprint();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleCreatorNameChange = (val: string) => {
+    const trimmedVal = val.slice(0, 50);
+    setCreatorName(trimmedVal);
+    setErrorMessage(null);
+    if (!hasCustomizedTitle) {
+      if (trimmedVal.trim()) {
+        setTitle(`How Well Do You Know ${trimmedVal.trim()}?`);
+      } else {
+        setTitle("How Well Do You Know Me?");
+      }
+    }
+  };
 
   const handleSelectTemplate = (template: QuizTemplate) => {
     setActiveTemplateId(template.id);
@@ -156,6 +214,10 @@ export function QuizCreator({ initialTemplateId }: QuizCreatorProps) {
   };
 
   const validateAll = (): string | null => {
+    const cleanName = creatorName.trim();
+    if (!cleanName) {
+      return "Please enter your name before publishing your quiz.";
+    }
     const cleanTitle = title.trim();
     if (!cleanTitle) {
       return "Please provide a title for your quiz.";
@@ -180,9 +242,16 @@ export function QuizCreator({ initialTemplateId }: QuizCreatorProps) {
 
   // Stage Transitions
   const handleStartCustomizing = () => {
+    const cleanName = creatorName.trim();
+    if (!cleanName) {
+      setErrorMessage("Please enter your name first before continuing.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     const cleanTitle = title.trim();
     if (!cleanTitle) {
       setErrorMessage("Please enter a title for your quiz before continuing.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     setErrorMessage(null);
@@ -243,6 +312,8 @@ export function QuizCreator({ initialTemplateId }: QuizCreatorProps) {
 
     try {
       const payload = {
+        creatorName: creatorName.trim(),
+        clientFingerprint: clientFingerprint || undefined,
         title: title.trim(),
         description: description.trim(),
         questions: questions.map((q) => ({
@@ -412,6 +483,59 @@ export function QuizCreator({ initialTemplateId }: QuizCreatorProps) {
           ===================================================================== */}
       {stage === "setup" && (
         <div className="space-y-6 animate-in fade-in duration-200">
+          {/* Creator Name & Identity Section */}
+          <section className="card-surface rounded-3xl p-5 sm:p-7 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-violet-500/30">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-violet-500/20 border border-violet-500/35 flex items-center justify-center text-violet-300 shadow-xs">
+                  <UserIcon className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-xs font-bold text-violet-400 uppercase tracking-wider">
+                    Step 1: Your Name
+                  </h2>
+                  <p className="text-[11px] text-[var(--text-muted)] font-medium">
+                    Friends will see who created this quiz
+                  </p>
+                </div>
+              </div>
+
+              {isIdentifiedUser && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>Recognized Device</span>
+                </span>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor="creator-name-input"
+                className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5 uppercase tracking-wider"
+              >
+                What is your name? <span className="text-pink-400">*</span>
+              </label>
+              <input
+                id="creator-name-input"
+                type="text"
+                value={creatorName}
+                onChange={(e) => handleCreatorNameChange(e.target.value)}
+                placeholder="Please enter you precious Name"
+                maxLength={50}
+                autoFocus
+                className="w-full min-h-[56px] px-4 py-3.5 rounded-2xl bg-[var(--input-bg)] border border-[var(--input-border)] focus:border-violet-500 focus:ring-2 focus:ring-violet-500/25 text-[var(--text-primary)] font-black text-xl placeholder:text-[var(--text-muted)] outline-none transition-all"
+              />
+              <div className="flex justify-between items-center mt-1.5 px-1">
+                <span className="text-[11px] text-[var(--text-muted)]">
+                  Required to link your quiz to this browser
+                </span>
+                <span className="text-[11px] text-violet-400 font-bold">
+                  {creatorName.length}/50
+                </span>
+              </div>
+            </div>
+          </section>
+
           {/* Template Selector Carousel */}
           <section>
             <div className="flex items-center justify-between mb-3 px-1">
@@ -513,7 +637,10 @@ export function QuizCreator({ initialTemplateId }: QuizCreatorProps) {
                   id="quiz-title-input"
                   type="text"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value.slice(0, 100))}
+                  onChange={(e) => {
+                    setTitle(e.target.value.slice(0, 100));
+                    setHasCustomizedTitle(true);
+                  }}
                   placeholder="e.g. How Well Do You Know Sarah?"
                   maxLength={100}
                   className="w-full min-h-[56px] px-4 py-3.5 rounded-2xl bg-[var(--input-bg)] border border-[var(--input-border)] focus:border-violet-500 focus:ring-2 focus:ring-violet-500/25 text-[var(--text-primary)] font-bold text-lg placeholder:text-[var(--text-muted)] outline-none transition-all"

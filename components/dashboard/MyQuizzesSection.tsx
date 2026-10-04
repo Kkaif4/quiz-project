@@ -10,9 +10,11 @@ import {
   Share2,
   Check,
   KeyRound,
+  User as UserIcon,
 } from "lucide-react";
 import type { IUserQuizSummary } from "@/types/quiz";
 import { formatRelativeTime } from "@/lib/utils";
+import { getBrowserFingerprint } from "@/lib/fingerprint";
 
 export interface MyQuizzesSectionProps {
   serverQuizzes: IUserQuizSummary[];
@@ -20,65 +22,128 @@ export interface MyQuizzesSectionProps {
 
 export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
   const [quizzes, setQuizzes] = useState<IUserQuizSummary[]>(serverQuizzes);
+  const [userName, setUserName] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  // Sync client-side localStorage tokens with server
+  // Sync client-side localStorage tokens and browser blueprint with server
   useEffect(() => {
-    try {
-      if (typeof window === "undefined" || !window.localStorage) return;
+    let isMounted = true;
 
-      const raw = localStorage.getItem("quiz_owner_tokens");
-      const localTokens: string[] = raw ? JSON.parse(raw) : [];
+    async function syncQuizzesAndFootprint() {
+      try {
+        if (typeof window === "undefined") return;
 
-      if (!Array.isArray(localTokens) || localTokens.length === 0) {
-        // If localStorage is empty but server has quizzes, backfill localStorage
-        if (serverQuizzes.length > 0) {
-          const serverTokens = serverQuizzes
-            .map((q) => q.ownerToken)
-            .filter(Boolean);
-          localStorage.setItem(
-            "quiz_owner_tokens",
-            JSON.stringify(serverTokens),
-          );
-        }
-        return;
-      }
-
-      // Check if localStorage contains tokens unknown to the server-rendered list
-      const knownTokens = new Set(quizzes.map((q) => q.ownerToken));
-      const missingTokens = localTokens.filter((token) => !knownTokens.has(token));
-
-      if (missingTokens.length > 0) {
-        // Fetch missing quizzes from multi-quiz hub endpoint
-        fetch("/api/quizzes/my-quizzes", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tokens: localTokens }),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.success && Array.isArray(data.data)) {
-              const fetchedQuizzes: IUserQuizSummary[] = data.data;
-              // Deduplicate and merge by quiz code
-              const quizMap = new Map<string, IUserQuizSummary>();
-              for (const q of [...quizzes, ...fetchedQuizzes]) {
-                quizMap.set(q.code, q);
-              }
-              const merged = Array.from(quizMap.values()).sort(
-                (a, b) =>
-                  new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime(),
-              );
-              setQuizzes(merged);
-            }
+        // 1. Sync via Browser Blueprint (device identity recovery)
+        const fp = await getBrowserFingerprint();
+        if (fp && isMounted) {
+          fetch("/api/users/identify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ clientFingerprint: fp }),
           })
-          .catch((err) => {
-            console.error("Failed to sync client owner quizzes:", err);
-          });
+            .then((res) => res.json())
+            .then((data) => {
+              if (!isMounted) return;
+              if (data.success && data.data?.user?.name) {
+                setUserName(data.data.user.name);
+              }
+              if (
+                data.success &&
+                Array.isArray(data.data?.quizzes) &&
+                data.data.quizzes.length > 0
+              ) {
+                setQuizzes((prev) => {
+                  const quizMap = new Map<string, IUserQuizSummary>();
+                  for (const q of prev) {
+                    quizMap.set(q.code, q);
+                  }
+                  for (const q of data.data.quizzes) {
+                    if (!quizMap.has(q.code)) {
+                      quizMap.set(q.code, q);
+                    }
+                  }
+                  return Array.from(quizMap.values()).sort(
+                    (a, b) =>
+                      new Date(b.createdAt).getTime() -
+                      new Date(a.createdAt).getTime(),
+                  );
+                });
+              }
+            })
+            .catch((err) => {
+              console.warn("Footprint sync error:", err);
+            });
+        }
+
+        // 2. Sync client-side localStorage tokens with server
+        if (!window.localStorage) return;
+
+        const raw = localStorage.getItem("quiz_owner_tokens");
+        const localTokens: string[] = raw ? JSON.parse(raw) : [];
+
+        if (!Array.isArray(localTokens) || localTokens.length === 0) {
+          // If localStorage is empty but server has quizzes, backfill localStorage
+          if (serverQuizzes.length > 0) {
+            const serverTokens = serverQuizzes
+              .map((q) => q.ownerToken)
+              .filter((t): t is string => typeof t === "string" && t.length > 0);
+            localStorage.setItem(
+              "quiz_owner_tokens",
+              JSON.stringify(serverTokens),
+            );
+          }
+          return;
+        }
+
+        // Check if localStorage contains tokens unknown to the server-rendered list
+        const knownTokens = new Set(
+          quizzes.map((q) => q.ownerToken).filter(Boolean),
+        );
+        const missingTokens = localTokens.filter((token) => !knownTokens.has(token));
+
+        if (missingTokens.length > 0) {
+          // Fetch missing quizzes from multi-quiz hub endpoint
+          fetch("/api/quizzes/my-quizzes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tokens: localTokens }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (!isMounted) return;
+              if (data.success && Array.isArray(data.data)) {
+                const fetchedQuizzes: IUserQuizSummary[] = data.data;
+                // Deduplicate and merge by quiz code
+                setQuizzes((prev) => {
+                  const quizMap = new Map<string, IUserQuizSummary>();
+                  for (const q of prev) {
+                    quizMap.set(q.code, q);
+                  }
+                  for (const q of fetchedQuizzes) {
+                    quizMap.set(q.code, q);
+                  }
+                  return Array.from(quizMap.values()).sort(
+                    (a, b) =>
+                      new Date(b.createdAt).getTime() -
+                      new Date(a.createdAt).getTime(),
+                  );
+                });
+              }
+            })
+            .catch((err) => {
+              console.error("Failed to sync client owner quizzes:", err);
+            });
+        }
+      } catch (err) {
+        console.warn("Error accessing localStorage in MyQuizzesSection:", err);
       }
-    } catch (err) {
-      console.warn("Error accessing localStorage in MyQuizzesSection:", err);
     }
+
+    syncQuizzesAndFootprint();
+
+    return () => {
+      isMounted = false;
+    };
   }, [serverQuizzes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCopyLink = async (code: string) => {
@@ -104,14 +169,20 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-2xl bg-violet-500/15 border border-violet-500/30 flex items-center justify-center text-violet-400 shadow-xs">
-            <Sparkles className="w-4 h-4" />
+            {userName ? (
+              <UserIcon className="w-4 h-4 text-violet-300" />
+            ) : (
+              <Sparkles className="w-4 h-4 text-violet-400" />
+            )}
           </div>
           <div>
             <h2 className="text-lg sm:text-xl font-black text-[var(--text-primary)] tracking-tight">
-              Your Active Quizzes
+              {userName ? `Welcome back, ${userName}!` : "Your Active Quizzes"}
             </h2>
             <p className="text-xs font-medium text-[var(--text-secondary)]">
-              Quizzes you created on this device
+              {userName
+                ? "Quizzes linked to this device & browser footprint"
+                : "Quizzes you created on this device"}
             </p>
           </div>
         </div>
@@ -185,14 +256,25 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
 
               {/* Bottom: Action Buttons (56px min touch target) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                <Link
-                  href={`/manage/${quiz.ownerToken}`}
-                  className="min-h-[56px] py-4 px-4 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:brightness-110 active:scale-[0.98] transition-all font-bold text-xs sm:text-sm shadow-md shadow-violet-600/25 flex items-center justify-center gap-2 cursor-pointer glow-purple"
-                >
-                  <KeyRound className="w-4 h-4 text-white/90" />
-                  <span>Manage</span>
-                  <ChevronRight className="w-4 h-4 text-white/70 ml-auto sm:ml-0" />
-                </Link>
+                {quiz.ownerToken ? (
+                  <Link
+                    href={`/manage/${quiz.ownerToken}`}
+                    className="min-h-[56px] py-4 px-4 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:brightness-110 active:scale-[0.98] transition-all font-bold text-xs sm:text-sm shadow-md shadow-violet-600/25 flex items-center justify-center gap-2 cursor-pointer glow-purple"
+                  >
+                    <KeyRound className="w-4 h-4 text-white/90" />
+                    <span>Manage</span>
+                    <ChevronRight className="w-4 h-4 text-white/70 ml-auto sm:ml-0" />
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/q/${quiz.code}`}
+                    className="min-h-[56px] py-4 px-4 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:brightness-110 active:scale-[0.98] transition-all font-bold text-xs sm:text-sm shadow-md shadow-violet-600/25 flex items-center justify-center gap-2 cursor-pointer glow-purple"
+                  >
+                    <Eye className="w-4 h-4 text-white/90" />
+                    <span>View Quiz</span>
+                    <ChevronRight className="w-4 h-4 text-white/70 ml-auto sm:ml-0" />
+                  </Link>
+                )}
 
                 <button
                   type="button"

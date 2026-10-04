@@ -170,16 +170,36 @@ const ReportSchema = new Schema(
 
 ---
 
-### 2.4 `users` Collection (Future Extension Placeholder)
+### 2.4 `users` Collection (Browser Blueprint & Creator Profile)
 
-Prepared for post-MVP account linking and quiz claiming.
+Stores passwordless creator identity anchored by client-side browser fingerprint and salted server-side IP hash.
 
 ```ts
-const UserSchema = new Schema(
+const UserSchema = new Schema<IUser>(
   {
-    name: { type: String, trim: true, maxlength: 50 },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 50,
+    },
+    clientFingerprint: {
+      type: String,
+      trim: true,
+      sparse: true,
+      index: true,
+    },
+    ipHash: {
+      type: String,
+      trim: true,
+      sparse: true,
+      index: true,
+    },
+    userAgent: { type: String, default: null },
+    lastSeenAt: { type: Date, default: Date.now },
     username: {
       type: String,
+      trim: true,
       lowercase: true,
       unique: true,
       sparse: true,
@@ -187,6 +207,7 @@ const UserSchema = new Schema(
     },
     email: {
       type: String,
+      trim: true,
       lowercase: true,
       unique: true,
       sparse: true,
@@ -197,6 +218,8 @@ const UserSchema = new Schema(
   },
   { timestamps: true },
 );
+
+UserSchema.index({ clientFingerprint: 1, ipHash: 1 });
 ```
 
 ---
@@ -208,7 +231,10 @@ const UserSchema = new Schema(
 | `quizzes`  | `code`                                    | Unique   | Public URL lookup (`/q/:code`)                    |
 | `quizzes`  | `ownerTokenHash`                          | Unique   | Private owner dashboard lookup (`/manage/:token`) |
 | `quizzes`  | `status`                                  | Standard | Filter out disabled quizzes                       |
-| `quizzes`  | `ownerId`                                 | Standard | Future user dashboard lookups                     |
+| `quizzes`  | `ownerId`                                 | Standard | User quiz ownership & returning recovery queries  |
+| `users`    | `clientFingerprint`                       | Sparse   | Fast device blueprint lookup (`/api/users/identify`) |
+| `users`    | `ipHash`                                  | Sparse   | Network locality lookup                           |
+| `users`    | `{ clientFingerprint: 1, ipHash: 1 }`     | Compound | Fast composite blueprint & network verification   |
 | `attempts` | `code`                                    | Unique   | Result page lookup (`/result/:attemptCode`)       |
 | `attempts` | `quizId`                                  | Standard | Scoped attempts lookup                            |
 | `attempts` | `{ quizId: 1, score: -1, createdAt: -1 }` | Compound | Fast, zero-memory-sort leaderboard queries        |

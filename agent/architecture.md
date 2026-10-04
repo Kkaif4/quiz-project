@@ -56,9 +56,9 @@ Lemon Quiz is a lightweight, viral, full-stack Next.js application built to deli
 
 ---
 
-## 3. Identity & Ownership Architecture
+## 3. Identity, Browser Blueprint & Ownership Architecture
 
-To eliminate drop-off from registration walls, Lemon Quiz uses **Capability URLs and Hashed Tokens**:
+To eliminate drop-off from registration walls while maintaining persistent creator identity across browser sessions, Lemon Quiz combines **Client Browser Blueprints**, **Salted IP Anchors**, and **Capability URLs**:
 
 ```
                        ┌─────────────────────────┐
@@ -67,23 +67,27 @@ To eliminate drop-off from registration walls, Lemon Quiz uses **Capability URLs
                                     │
                                     ▼
        ┌────────────────────────────────────────────────────────┐
-       │ Generates:                                             │
-       │ 1. Public Quiz Code: nanoId(8)   -> /q/a8Kx29          │
-       │ 2. Raw Owner Token:  crypto(32)  -> 64-char hex string │
+       │ 1. Mandatory Creator Name: "Sarah" (sanitized)         │
+       │ 2. Client Browser Blueprint: SHA-256 Web Crypto Hash   │
+       │ 3. Salted Server IP Hash: SHA-256(clientIp + SALT)     │
+       │ 4. Public Quiz Code: nanoId(8)   -> /q/a8Kx29          │
+       │ 5. Raw Owner Token:  crypto(32)  -> 64-char hex string │
        └────────────────────────────┬───────────────────────────┘
                                     │
                       ┌─────────────┴─────────────┐
                       ▼                           ▼
           ┌───────────────────────┐   ┌───────────────────────┐
-          │ SHA-256 Token Hash    │   │ Raw Token to Client   │
-          │ -> Saved in MongoDB   │   │ -> Private URL        │
-          │   quizzes collection  │   │ -> HTTP-only Cookie   │
-          └───────────────────────┘   │ -> LocalStorage Backup│
-                                      └───────────────────────┘
+          │ SHA-256 Hashes in DB  │   │ Raw Token to Client   │
+          │ -> User Collection    │   │ -> Private Manage URL │
+          │    (blueprint, ipHash)│   │ -> HTTP-only Cookie   │
+          │ -> Quiz.ownerTokenHash│   │ -> LocalStorage Backup│
+          │ -> Quiz.ownerId (ref) │   └───────────────────────┘
+          └───────────────────────┘
 ```
 
+- **Browser Blueprint (`lib/fingerprint.ts`)**: Native Web Crypto SHA-256 combining Canvas 2D render geometry, screen resolution, timezone, locale, hardware concurrency, and platform. Zero external dependencies (<3ms, 0 KB bundle increase).
 - **Owner Dashboard Access**: When navigating to `/manage/[ownerToken]`, the server computes `hashToken(ownerToken)` and matches against `Quiz.ownerTokenHash`. The database never contains plaintext tokens.
-- **"My Quizzes" Hub**: Returning creators visit `/` and their browser presents the `quiz_owner_tokens` cookie. The server fetches active quizzes matching those hashes without requiring a login session.
+- **Returning User Recovery (`/api/users/identify`)**: Returning creators visit `/` or `/create`. The client computes their browser blueprint. The server matches the user and returns their profile and active quizzes, greeting them with `"Welcome back, Sarah!"` even if cookies or `localStorage` were purged.
 
 ---
 

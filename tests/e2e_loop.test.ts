@@ -5,9 +5,11 @@ import { connectToDatabase } from "@/lib/db";
 import { Quiz } from "@/models/Quiz";
 import { Attempt } from "@/models/Attempt";
 import { Report } from "@/models/Report";
+import { User } from "@/models/User";
 import { hashToken, hashIp } from "@/lib/tokens";
 import { getAttemptResultByCode, getOwnerQuizByToken } from "@/lib/quiz";
 import { POST as createQuizPost } from "@/app/api/quizzes/route";
+import { POST as identifyUserPost } from "@/app/api/users/identify/route";
 import { GET as getQuizGet, PATCH as updateQuizStatusPatch } from "@/app/api/quizzes/[quizCode]/route";
 import { POST as submitAttemptPost } from "@/app/api/quizzes/[quizCode]/attempts/route";
 import { POST as submitReportPost } from "@/app/api/reports/route";
@@ -118,8 +120,31 @@ async function runE2EVerification() {
   // -------------------------------------------------------------------------
   // TEST 1: Quiz Creation & Cryptographic Identity
   // -------------------------------------------------------------------------
-  console.log("--- [TEST 1] Quiz Creation & Cryptographic Token Generation ---");
+  console.log("--- [TEST 1] Quiz Creation, Creator Name & Browser Blueprint ---");
+  
+  // 1a. Invariant Check: Missing creatorName must be rejected (HTTP 400)
+  const invalidPayload = {
+    title: testTitle,
+    description: "Testing invalid payload without creatorName",
+    questions,
+  };
+  const invalidReq = new Request("http://localhost:3000/api/quizzes", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-forwarded-for": "203.0.113.195",
+    },
+    body: JSON.stringify(invalidPayload),
+  });
+  const invalidRes = await createQuizPost(invalidReq);
+  assert.strictEqual(invalidRes.status, 400, "Quiz creation without creatorName must return HTTP 400");
+  console.log(" Invariant Passed: Creation without creatorName successfully rejected (HTTP 400).");
+
+  // 1b. Valid Creation with creatorName and clientFingerprint
+  const testFingerprint = "e2e_test_fp_hash_1234567890abcdef";
   const createPayload = {
+    creatorName: "TestCreatorAlex",
+    clientFingerprint: testFingerprint,
     title: testTitle,
     description: "Testing complete viral cycle from creation to leaderboard",
     questions,
@@ -146,16 +171,45 @@ async function runE2EVerification() {
   assert.strictEqual(createBody.success, true);
   assert.ok(createBody.data.quizCode, "quizCode must be present");
   assert.ok(createBody.data.ownerToken, "ownerToken must be present");
+  assert.strictEqual(createBody.data.user?.name, "TestCreatorAlex", "Created user name must match in response");
 
   const { quizCode, ownerToken } = createBody.data;
   console.log(` Quiz created successfully: Code=${quizCode}`);
 
-  // Direct DB inspection
+  // Direct DB inspection of User document
+  const userDoc = await User.findOne({ clientFingerprint: testFingerprint }).lean();
+  if (!userDoc) throw new Error("User document must exist in DB");
+  assert.strictEqual(userDoc.name, "TestCreatorAlex");
+  assert.strictEqual(userDoc.ipHash, hashIp("203.0.113.195"));
+  console.log(" Invariant Passed: User document created in MongoDB with browser footprint & salted IP hash.");
+
+  // Direct DB inspection of Quiz document
   const quizDoc = await Quiz.findOne({ code: quizCode }).lean();
   if (!quizDoc) throw new Error("Quiz must exist in DB");
   assert.strictEqual(quizDoc.ownerTokenHash, hashToken(ownerToken), "ownerTokenHash in DB must match hash of rawToken");
   assert.strictEqual((quizDoc as unknown as Record<string, unknown>).ownerToken, undefined, "Raw ownerToken must NEVER be stored in DB");
-  console.log(" Invariant Passed: Raw ownerToken never saved to MongoDB, only SHA-256 hash.");
+  assert.strictEqual(quizDoc.ownerId?.toString(), userDoc._id.toString(), "Quiz ownerId must match user document ID");
+  console.log(" Invariant Passed: Raw ownerToken never saved to MongoDB, only SHA-256 hash; ownerId linked to User.");
+
+  // 1c. Test Browser Blueprint User Identification (/api/users/identify)
+  const identifyReq = new Request("http://localhost:3000/api/users/identify", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-forwarded-for": "203.0.113.195",
+    },
+    body: JSON.stringify({ clientFingerprint: testFingerprint }),
+  });
+  const identifyRes = await identifyUserPost(identifyReq);
+  assert.strictEqual(identifyRes.status, 200, "User identify should return HTTP 200");
+  const identifyBody = await identifyRes.json();
+  assert.strictEqual(identifyBody.success, true);
+  assert.strictEqual(identifyBody.data.user.name, "TestCreatorAlex");
+  assert.ok(
+    identifyBody.data.quizzes.some((q: { code: string }) => q.code === quizCode),
+    "Returning user identify must recover the newly created quiz",
+  );
+  console.log(" Invariant Passed: Browser blueprint identification recovered user name & active quizzes.");
 
   // -------------------------------------------------------------------------
   // TEST 2: Zero Answer Key Leakage Verification
@@ -375,7 +429,8 @@ async function runE2EVerification() {
   await Quiz.deleteOne({ code: quizCode });
   await Attempt.deleteMany({ quizId: quizDoc._id });
   await Report.deleteOne({ _id: reportId });
-  console.log("\n Cleaned up test quiz, attempt, and report records.");
+  await User.deleteMany({ clientFingerprint: testFingerprint });
+  console.log("\n Cleaned up test quiz, attempt, report, and user records.");
 
   console.log("\n=================================================================");
   console.log("   ALL E2E VERIFICATION CHECKS PASSED WITH 100% SUCCESS!        ");

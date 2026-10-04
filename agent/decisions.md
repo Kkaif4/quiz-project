@@ -158,3 +158,19 @@
   - *Positive*: Eliminates 1,500ms+ DoH latency penalty on every cold start; enables full Next.js streaming SSR and native image optimization; standardizes deployment on Vercel.
   - *Negative*: Eliminates edge isolate deployment (not required for MVP).
 
+---
+
+### ADR-012: Browser Blueprint (Fingerprint) & Passwordless User Identity
+
+- **Status**: Accepted
+- **Context**: In consumer-social viral applications aimed at teens (ages 12–20), traditional authentication (passwords, emails, OAuth walls) causes severe drop-off (~60–80% friction). While capability tokens and cookies provided anonymous ownership, users frequently lost quiz access when switching devices, using in-app social browsers (Instagram, TikTok webviews), or clearing browser cookies. Additionally, quizzes lacked explicit creator name attribution, hurting virality and social context.
+- **Decision**:
+  1. *Native Client-Side Browser Blueprint (`lib/fingerprint.ts`)*: Generate a deterministic, high-entropy 64-character SHA-256 hash using native Web Crypto (`window.crypto.subtle`) combined with Canvas 2D render geometry, screen resolution, timezone, locale, hardware concurrency, touch points, and platform. Zero external dependencies, 0 KB bundle weight, <3ms execution.
+  2. *Privacy-Preserving Salted IP Anchor*: On the server, compute a salted SHA-256 hash of the client IP (`hashIp(clientIp)`). Raw IPs are never stored. The client fingerprint serves as the device discriminator, while `ipHash` verifies network locality and guards against cross-device spoofing.
+  3. *Mandatory Creator Name Flow*: Refactor Stage 1 of `QuizCreator.tsx` to require the creator's name first (e.g. "Sarah"). The quiz title auto-adapts to `"How Well Do You Know Sarah?"`. The name is sanitized via the profanity filter and upserted into the `User` collection.
+  4. *Automatic Quiz Recovery (`/api/users/identify`)*: When a returning user opens the app, their browser footprint is matched against MongoDB. If matched, their profile and active quizzes are seamlessly loaded and displayed, greeting them with `"Welcome back, Sarah!"` even if browser cookies or `localStorage` were purged.
+- **Consequences**:
+  - *Positive*: Zero-friction identity with 0 drop-off; no passwords or emails required; seamless returning user recognition across browser restarts; prevents collisions on shared school/dorm Wi-Fi networks by using client-side canvas/hardware fingerprint as primary key; 100% compliant with zero-PII privacy rules.
+  - *Negative*: Device switches (e.g. phone to desktop) still require sharing the `/manage/:ownerToken` capability URL unless accounts are linked post-MVP.
+
+

@@ -72,6 +72,13 @@ export const QuizSettingsSchema = z.object({
  * - Anti-bot honeypot: `website` must be empty or omitted.
  */
 export const CreateQuizSchema = z.object({
+  creatorName: z
+    .string()
+    .trim()
+    .min(1, "Creator name is required")
+    .max(50, "Creator name must not exceed 50 characters")
+    .refine((v) => !containsProfanity(v), "Name contains inappropriate language"),
+  clientFingerprint: z.string().trim().max(64).optional(),
   title: z
     .string()
     .trim()
@@ -215,5 +222,19 @@ export type AdminModerateReportInputSchemaType = z.infer<
 export type AdminReportsQuerySchemaType = z.infer<
   typeof AdminReportsQuerySchema
 >;
+
+/**
+ * Zod schema for identifying a returning user via browser fingerprint.
+ */
+export const IdentifyUserSchema = z.object({
+  clientFingerprint: z
+    .string()
+    .trim()
+    .min(8, "Fingerprint is required")
+    .max(64, "Invalid fingerprint length"),
+});
+
+export type IdentifyUserInputSchemaType = z.infer<typeof IdentifyUserSchema>;
+
 
 

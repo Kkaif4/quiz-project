@@ -200,3 +200,11 @@ export const quizSyncLimiter = new SlidingWindowRateLimiter({
   max: 30,
   maxEntries: 5000,
 });
+
+/** User Footprint Identification: 30 requests per 10 minutes */
+export const userIdentifyLimiter = new SlidingWindowRateLimiter({
+  windowMs: 10 * 60 * 1000,
+  max: 30,
+  maxEntries: 5000,
+});
+

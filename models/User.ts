@@ -2,15 +2,35 @@ import mongoose, { Schema, type Model } from "mongoose";
 import type { IUser } from "@/types/quiz";
 
 /**
- * Placeholder User model for post-MVP account linking and quiz claiming.
- * MVP anonymous quiz creators do not require documents in this collection.
+ * User model representing quiz creators identified via browser blueprint / network footprint.
  */
 const UserSchema = new Schema<IUser>(
   {
     name: {
       type: String,
+      required: true,
       trim: true,
       maxlength: 50,
+    },
+    clientFingerprint: {
+      type: String,
+      trim: true,
+      sparse: true,
+      index: true,
+    },
+    ipHash: {
+      type: String,
+      trim: true,
+      sparse: true,
+      index: true,
+    },
+    userAgent: {
+      type: String,
+      default: null,
+    },
+    lastSeenAt: {
+      type: Date,
+      default: Date.now,
     },
     username: {
       type: String,
@@ -42,6 +62,9 @@ const UserSchema = new Schema<IUser>(
     timestamps: true,
   },
 );
+
+// Compound index for high-speed device & network footprint lookup
+UserSchema.index({ clientFingerprint: 1, ipHash: 1 });
 
 export const User: Model<IUser> =
   (mongoose.models.User as Model<IUser>) ||

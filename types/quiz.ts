@@ -163,11 +163,15 @@ export interface IReport {
 export type UserStatus = "active" | "suspended";
 
 /**
- * Placeholder user model interface for post-MVP account linking.
+ * User model interface representing a creator identified via browser blueprint / account.
  */
 export interface IUser {
   _id?: Types.ObjectId | string;
-  name?: string;
+  name: string;
+  clientFingerprint?: string;
+  ipHash?: string;
+  userAgent?: string | null;
+  lastSeenAt?: Date | string;
   username?: string;
   email?: string;
   image?: string | null;
@@ -178,6 +182,8 @@ export interface IUser {
 
 // Request and response contract interfaces
 export interface CreateQuizInput {
+  creatorName: string;
+  clientFingerprint?: string;
   title: string;
   description?: string;
   questions: {
@@ -216,6 +222,10 @@ export interface QuizCreationResult {
   ownerToken: string;
   manageUrl: string;
   shareUrl: string;
+  user?: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface AttemptSubmissionResult {

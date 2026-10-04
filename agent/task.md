@@ -1,8 +1,8 @@
 # Task Execution & Progress Tracker (`task.md`)
 
-> **Document Version**: `v1.3.0`  
+> **Document Version**: `v1.4.0`  
 > **Last Updated**: `2026-10-05`  
-> **Active Phase**: `All Phases Completed — Production Ready & Optimized for Vercel`  
+> **Active Phase**: `Phase 8: Browser Blueprint User Identification & Creator Name Flow`  
 > **Rule for Agents**: Update this file immediately after completing or beginning any task. Increment version (`v1.0.1`, `v1.1.0`) when phases or major milestones change.
 
 ---
@@ -19,8 +19,9 @@
 | **Phase 5**   | Server Hardening, Security & Anti-Abuse        | **P1 / P2** | ✅ `COMPLETED` | 4 / 4           |
 | **Phase 6**   | Viral Polish & Verification Checklist          | **P2 / P0** | ✅ `COMPLETED` | 3 / 3           |
 | **Phase 7**   | Performance Incident & Vercel Migration        | **P0 / P1** | ✅ `COMPLETED` | 8 / 8           |
+| **Phase 8**   | Browser Blueprint & Creator Identity           | **P0 / P1** | ✅ `COMPLETED` | 8 / 8           |
 
-**Total Progress**: `38 / 38 Tasks (100%)`
+**Total Progress**: `46 / 46 Tasks (100%)`
 
 ---
 
@@ -238,10 +239,43 @@
 
 ---
 
+### Phase 8: Browser Blueprint User Identification & Creator Name Flow (P0 / P1)
+
+- [x] **TASK-801** `[P0]`: **Native Browser Fingerprint Engine (`lib/fingerprint.ts`)**
+  - Implement zero-dependency client-side browser fingerprint generator using Web Crypto SHA-256 and Canvas 2D.
+  - Extract screen geometry, timezone, locale, hardware concurrency, touch points, and platform.
+  - Implement in-memory / sessionStorage caching for instantaneous sub-1ms re-reads.
+- [x] **TASK-802** `[P0]`: **User Schema & Domain Types Upgrade (`models/User.ts` & `types/quiz.ts`)**
+  - Update `IUser` interface: `name`, `clientFingerprint`, `ipHash`, `lastSeenAt`, `status`.
+  - Update Mongoose `UserSchema` with validation and compound indexes `{ clientFingerprint: 1, ipHash: 1 }`.
+- [x] **TASK-803** `[P0]`: **Zod Validation Schemas (`lib/validation.ts`)**
+  - Update `CreateQuizSchema` to require `creatorName` (1–50 chars) and accept optional `clientFingerprint`.
+  - Create `IdentifyUserSchema` for `{ clientFingerprint: string }`.
+- [x] **TASK-804** `[P0]`: **User Identification Route (`POST /api/users/identify`)**
+  - Implement endpoint with rate limiting (`userIdentifyLimiter`), IP hashing, user lookup, and active quiz fetching.
+  - Asynchronously refresh `lastSeenAt` and `ipHash` for recognized users.
+- [x] **TASK-805** `[P0]`: **Quiz Creation Route User Association (`POST /api/quizzes`)**
+  - Sanitize `creatorName` with `sanitizeText`.
+  - Upsert `User` document with `name`, `clientFingerprint`, `ipHash`, and assign `Quiz.ownerId = user._id`.
+- [x] **TASK-806** `[P0]`: **Quiz Creator Name Step & Auto-Title (`components/quiz/QuizCreator.tsx`)**
+  - Refactor Stage 1 to require Creator Name input first.
+  - Auto-generate/suggest title: `"How Well Do You Know ${creatorName}?"`.
+  - Check browser blueprint on mount and pre-fill name if returning user.
+  - Enforce >=56px touch target and clean error validation.
+- [x] **TASK-807** `[P1]`: **Returning User Recovery on Landing Page (`components/dashboard/MyQuizzesSection.tsx`)**
+  - Call `/api/users/identify` on client mount with browser blueprint.
+  - Display personalized greeting: `"Welcome back, {userName}! 👋"` and recover active quizzes.
+- [x] **TASK-808** `[P0]`: **Full-Loop Test Suite & Verification (`tests/e2e_loop.test.ts`)**
+  - Update automated test suite to verify creator name requirement, user creation in MongoDB, blueprint lookup, and privacy invariants.
+  - Verify clean `npm run lint` and `npm run build`.
+
+---
+
 ## 3. Version History & Changelog
 
 | Version  | Date         | Changes Summary                                                                                                                                                                                                                                                       |
 | :------- | :----------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `v1.4.0` | `2026-10-05` | Added Phase 8: Browser Blueprint User Identification & Creator Name Flow (TASK-801 through TASK-808). Added zero-dependency Web Crypto fingerprinting, activated User model with salted IP hashing, mandatory creator name in QuizCreator, and returning user recovery. |
 | `v1.3.0` | `2026-10-05` | Added Phase 7: Performance Incident & Vercel Migration Optimization (TASK-701 through TASK-708). Pivoting from Cloudflare Workers to Vercel, stripping DoH DNS overhead, adding React.cache deduplication, eliminating 2.4MB asset bloat, and streaming SSR.           |
 | `v1.2.0` | `2026-10-02` | Completed Phase 6: Dynamic OG metadata & /api/og generator (TASK-601), route loading skeletons & error boundaries (TASK-602), full end-to-end verification loop (TASK-603), and Cloudflare Workers DoH SRV resolution fix (ADR-010). All 30/30 tasks complete (100%). |
 | `v1.1.1` | `2026-10-02` | Completed Phase 3.5: Design System & Mobile UX Overhaul (TASK-351 through TASK-356). Implemented centralized tokens, ambient fixed backdrop, 3-stage QuizCreator wizard, 56px touch deck, trophy results card, and overhauled dashboard/landing.                      |
@@ -253,3 +287,4 @@
 | `v1.0.2` | `2026-10-02` | Completed Phase 2 (TASK-201 through TASK-205): Rate limiting, quiz creation, public loader, scoring, and reports.                                                                                                                                                     |
 | `v1.0.1` | `2026-10-02` | Completed Phase 1 (TASK-101 through TASK-105): dependencies, models, singleton pool, validation, and token utilities.                                                                                                                                                 |
 | `v1.0.0` | `2026-10-02` | Initial task tracker created from Implementation Plan.                                                                                                                                                                                                                |
+
