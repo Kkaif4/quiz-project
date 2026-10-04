@@ -293,8 +293,34 @@ async function runSeoTests() {
   );
   console.log("  ✔ Google Site Verification meta tags (HTML tag + DNS) configured on root layout and homepage.\n");
 
+  // 12. Google AdSense Account Meta Tag & ads.txt Configuration
+  console.log("▶ [TEST 12] Testing Google AdSense Account & ads.txt Configuration...");
+  const adsTxtPath = path.resolve(process.cwd(), "public/ads.txt");
+  assert.ok(fs.existsSync(adsTxtPath), "public/ads.txt must exist");
+  const adsTxtContent = fs.readFileSync(adsTxtPath, "utf-8");
+  assert.ok(
+    adsTxtContent.includes("pub-6625500498736052"),
+    "public/ads.txt must contain the AdSense publisher account ID pub-6625500498736052",
+  );
+  assert.ok(
+    adsTxtContent.includes("google.com, pub-6625500498736052, DIRECT, f08c47fec0942fa0"),
+    "public/ads.txt must have the canonical direct seller line",
+  );
+
+  assert.ok(
+    layoutContent.includes("ca-pub-6625500498736052"),
+    "app/layout.tsx must configure AdSense client / account ca-pub-6625500498736052",
+  );
+
+  assert.strictEqual(
+    homeMetadata.other?.["google-adsense-account"],
+    "ca-pub-6625500498736052",
+    "Homepage metadata must configure google-adsense-account meta tag",
+  );
+  console.log("  ✔ Google AdSense account meta tag and public/ads.txt properly verified.\n");
+
   console.log("=================================================================");
-  console.log("   🎉 ALL 11 SEO & SEARCH ENGINE INDEXING TESTS PASSED!          ");
+  console.log("   🎉 ALL 12 SEO & SEARCH ENGINE INDEXING TESTS PASSED!          ");
   console.log("=================================================================\n");
 }
 

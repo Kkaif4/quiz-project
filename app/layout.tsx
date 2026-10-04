@@ -74,6 +74,9 @@ export const metadata: Metadata = {
       "CUJwVLOe6GlodleCrDikkTAsHdO-W4cOzrkScyBEN4M",
     ],
   },
+  other: {
+    "google-adsense-account": "ca-pub-6625500498736052",
+  },
 };
 
 export default function RootLayout({
@@ -86,6 +89,13 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6625500498736052"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="min-h-full flex flex-col relative text-[var(--text-primary)]">
         {/* Fixed Non-Scrolling Branded Background with Overlay */}
         <div aria-hidden="true" className="bg-ambient-backdrop">

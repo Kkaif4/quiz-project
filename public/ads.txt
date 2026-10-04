@@ -1,5 +1,1 @@
-# Authorized Digital Sellers (ads.txt) for LemonQuiz
-# Replace the placeholder line below with your Google AdSense publisher account:
-# google.com, pub-6625500498736052, DIRECT, f08c47fec0942fa0
-
 google.com, pub-6625500498736052, DIRECT, f08c47fec0942fa0

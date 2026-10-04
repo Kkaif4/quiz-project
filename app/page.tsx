@@ -34,6 +34,9 @@ export const metadata: Metadata = {
       "CUJwVLOe6GlodleCrDikkTAsHdO-W4cOzrkScyBEN4M",
     ],
   },
+  other: {
+    "google-adsense-account": "ca-pub-6625500498736052",
+  },
 };
 
 /**
