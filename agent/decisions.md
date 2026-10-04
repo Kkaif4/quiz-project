@@ -16,6 +16,8 @@
 - [ADR-007: Denormalized Score and Percentage Storage on Attempt Write](#adr-007-denormalized-score-and-percentage-storage-on-attempt-write)
 - [ADR-008: Next.js 16 Canary & React 19 App Router with Async Params](#adr-008-nextjs-16-canary--react-19-app-router-with-async-params)
 - [ADR-009: Timing-Safe Admin Authentication & Dual-Layer Content Sanitization](#adr-009-timing-safe-admin-authentication--dual-layer-content-sanitization)
+- [ADR-010: DNS-over-HTTPS (DoH) SRV Resolution for Cloudflare Workers (Superseded)](#adr-010-dns-over-https-doh-srv-resolution-for-cloudflare-workers--edge-isolation)
+- [ADR-011: Migration to Vercel Serverless Architecture & Node.js Native Connection Pooling](#adr-011-migration-to-vercel-serverless-architecture--nodejs-native-connection-pooling)
 
 ---
 
@@ -127,7 +129,7 @@
 
 ### ADR-010: DNS-over-HTTPS (DoH) SRV Resolution for Cloudflare Workers & Edge Isolation
 
-- **Status**: Accepted
+- **Status**: Superseded by ADR-011
 - **Context**: When deploying the Next.js App Router application to Cloudflare Workers (`workerd` runtime) using `@opennextjs/cloudflare`, connecting to MongoDB Atlas via standard `mongodb+srv://` URIs caused immediate runtime crashes on API routes (`Quiz creation error: at a (worker.js)...`). Cloudflare Workers V8 isolate runtime does not support the native Node.js `dns.resolveSrv` and `dns.resolveTxt` methods invoked by the official MongoDB driver, causing SRV record resolution to throw unhandled exceptions.
 - **Decision**:
   Implement a transparent DNS-over-HTTPS (DoH) resolution helper (`resolveMongoSrvUri`) in `lib/db.ts`:
@@ -138,6 +140,21 @@
   5. Enforce `ssl=true` and assemble a standard direct connection string: `mongodb://user:pass@host1:27017,host2:27017,host3:27017/db?authSource=admin&replicaSet=...&ssl=true`.
   6. Cache the resolved URI in memory so the DNS lookup executes only once per Worker instance lifecycle.
 - **Consequences**:
-  - *Positive*: Completely eliminates SRV lookup failures in Cloudflare Workers isolate environments; allows Mongoose to connect directly to MongoDB Atlas replica sets via `nodejs_compat` TCP sockets without any external Node DNS dependencies; maintains 100% backward compatibility with standard Node.js and local development.
-  - *Negative*: Adds a single one-off ~100ms HTTPS fetch on cold worker start when first connecting to MongoDB.
+  - *Positive*: Resolved SRV lookup failures in Cloudflare Workers isolate environments.
+  - *Negative*: Added severe 1,500ms+ network delay on cold start due to sequential external HTTPS queries.
+
+---
+
+### ADR-011: Migration to Vercel Serverless Architecture & Node.js Native Connection Pooling
+
+- **Status**: Accepted
+- **Context**: The application experienced severe latency bottlenecks under Cloudflare Workers: sequential HTTPS DoH queries added 1,500ms+ delay on cold starts, and workerd edge isolates caused connection churn. Moving the deployment platform to Vercel provides a standard Node.js serverless runtime environment.
+- **Decision**:
+  1. Deprecate and remove all Cloudflare Workers workarounds (`resolveMongoSrvUri` DoH queries to Cloudflare and Google DNS, `@opennextjs/cloudflare` imports, and `wrangler` bindings).
+  2. Use native Node.js Mongoose connection pooling with `mongodb+srv://` connection strings, relying on Node's high-speed native DNS resolution (`dns.resolveSrv` ~10ms).
+  3. Cache the Mongoose connection singleton in `globalThis.mongoose` across warm Vercel serverless containers.
+  4. Lower connection timeouts (`serverSelectionTimeoutMS: 5000`, `connectTimeoutMS: 5000`) for fast failover.
+- **Consequences**:
+  - *Positive*: Eliminates 1,500ms+ DoH latency penalty on every cold start; enables full Next.js streaming SSR and native image optimization; standardizes deployment on Vercel.
+  - *Negative*: Eliminates edge isolate deployment (not required for MVP).
 

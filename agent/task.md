@@ -1,8 +1,8 @@
 # Task Execution & Progress Tracker (`task.md`)
 
-> **Document Version**: `v1.2.0`  
-> **Last Updated**: `2026-10-02`  
-> **Active Phase**: `All Phases Completed — Production Ready`  
+> **Document Version**: `v1.3.0`  
+> **Last Updated**: `2026-10-05`  
+> **Active Phase**: `All Phases Completed — Production Ready & Optimized for Vercel`  
 > **Rule for Agents**: Update this file immediately after completing or beginning any task. Increment version (`v1.0.1`, `v1.1.0`) when phases or major milestones change.
 
 ---
@@ -18,8 +18,9 @@
 | **Phase 4**   | Owner Management & Dashboard                   | **P1**      | ✅ `COMPLETED` | 4 / 4           |
 | **Phase 5**   | Server Hardening, Security & Anti-Abuse        | **P1 / P2** | ✅ `COMPLETED` | 4 / 4           |
 | **Phase 6**   | Viral Polish & Verification Checklist          | **P2 / P0** | ✅ `COMPLETED` | 3 / 3           |
+| **Phase 7**   | Performance Incident & Vercel Migration        | **P0 / P1** | ✅ `COMPLETED` | 8 / 8           |
 
-**Total Progress**: `30 / 30 Tasks (100%)`
+**Total Progress**: `38 / 38 Tasks (100%)`
 
 ---
 
@@ -203,10 +204,45 @@
 
 ---
 
+### Phase 7: Performance Incident & Vercel Migration Optimization (P0 / P1)
+
+- [x] **TASK-701** `[P0]`: **Streamline `lib/db.ts` for Vercel & Node.js Native Mongoose**
+  - Remove Cloudflare DoH resolution (`resolveMongoSrvUri`), Google/Cloudflare HTTPS fetch loops, and OpenNext context checks.
+  - Connect directly with standard Node.js Mongoose driver using connection singleton cached in `globalThis.mongoose`.
+  - Added c-ares IPv4 `fastLookup` with in-memory caching to eliminate glibc OS DNS timeouts.
+  - Configure reliable failover timeouts (`maxPoolSize: 10`, `serverSelectionTimeoutMS: 10000`, `connectTimeoutMS: 10000`).
+- [x] **TASK-702** `[P0]`: **Implement `React.cache()` on Data Loaders in `lib/quiz.ts`**
+  - Wrap `getPublicQuizByCode` with `React.cache()` to deduplicate calls between `generateMetadata` and `QuizPage`.
+  - Wrap `getOwnerQuizByToken` with `React.cache()` for `ManagePage`.
+  - Wrap `getAttemptResultByCode` with `React.cache()` for `ResultPage`.
+  - Decouple view counter increment (`stats.views`) into non-blocking background promise.
+- [x] **TASK-703** `[P0]`: **Eliminate 2.4 MB Asset Bloat in `public/` & `globals.css`**
+  - Removed `public/background.png` (1.2 MB) and replaced with pure CSS ambient radial glow mesh (`0 KB` download).
+  - Replaced `public/browser-icon.png` (1.2 MB) with crisp, lightweight 180x180 PNG (`1.6 KB`, >99.8% reduction).
+  - Updated `app/globals.css` with zero-asset ambient mesh background.
+- [x] **TASK-704** `[P1]`: **Streamline `POST /api/quizzes/[quizCode]/attempts`**
+  - Remove redundant `Attempt.exists` check prior to document creation.
+  - Make `Quiz.updateOne({ $inc: { "stats.attempts": 1 } })` non-blocking fire-and-forget.
+  - Use `.lean()` and minimal projection on `Quiz.findOne`.
+- [x] **TASK-705** `[P1]`: **Streamline `POST /api/quizzes` Creation Route**
+  - Remove redundant `Quiz.exists` pre-check loop; insert directly with index collision error handling.
+- [x] **TASK-706** `[P1]`: **Non-Blocking Homepage Streaming in `app/page.tsx`**
+  - Wrap `MyQuizzesSection` inside `<Suspense fallback={null}>` so marketing hero and CTAs stream immediately without waiting for database queries.
+- [x] **TASK-707** `[P2]`: **Tune `next.config.ts` for Vercel & Node.js**
+  - Enable gzip/brotli compression (`compress: true`).
+  - Add `serverExternalPackages: ["mongoose"]`.
+- [x] **TASK-708** `[P0]`: **Latency Benchmarking & Full-Loop Verification**
+  - Verified 100% pass on comprehensive E2E loop test (`tests/e2e_loop.test.ts`).
+  - Verified clean `npm run lint` and `npm run build` (11/11 static pages, dynamic routes compiled).
+  - Updated `agent/task.md`, `agent/decisions.md` (ADR-011), and `agent/GRAPH_CONTEXT.md`.
+
+---
+
 ## 3. Version History & Changelog
 
 | Version  | Date         | Changes Summary                                                                                                                                                                                                                                                       |
 | :------- | :----------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `v1.3.0` | `2026-10-05` | Added Phase 7: Performance Incident & Vercel Migration Optimization (TASK-701 through TASK-708). Pivoting from Cloudflare Workers to Vercel, stripping DoH DNS overhead, adding React.cache deduplication, eliminating 2.4MB asset bloat, and streaming SSR.           |
 | `v1.2.0` | `2026-10-02` | Completed Phase 6: Dynamic OG metadata & /api/og generator (TASK-601), route loading skeletons & error boundaries (TASK-602), full end-to-end verification loop (TASK-603), and Cloudflare Workers DoH SRV resolution fix (ADR-010). All 30/30 tasks complete (100%). |
 | `v1.1.1` | `2026-10-02` | Completed Phase 3.5: Design System & Mobile UX Overhaul (TASK-351 through TASK-356). Implemented centralized tokens, ambient fixed backdrop, 3-stage QuizCreator wizard, 56px touch deck, trophy results card, and overhauled dashboard/landing.                      |
 | `v1.1.0` | `2026-10-02` | Added Phase 3.5: Design System & Mobile UX Overhaul (TASK-351 through TASK-356) based on agent/UI_Improvements.md; updated progress dashboard and active phase.                                                                                                       |

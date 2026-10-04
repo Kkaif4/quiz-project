@@ -98,7 +98,7 @@ body {
 }
 
 /* =========================================================================
-   FIXED AMBIENT BACKGROUND & OVERLAY
+   FIXED AMBIENT BACKGROUND & OVERLAY (Zero-Asset Pure CSS Glow)
    ========================================================================= */
 .bg-ambient-backdrop {
   position: fixed;
@@ -111,27 +111,36 @@ body {
 .bg-ambient-image {
   position: absolute;
   inset: 0;
-  background-image: url("/background.png");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0.18;
+  background-image:
+    radial-gradient(ellipse 60% 50% at 20% 15%, rgba(139, 92, 246, 0.22) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 20%, rgba(244, 114, 182, 0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 60% at 50% 60%, rgba(99, 102, 241, 0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 50% at 85% 85%, rgba(168, 85, 247, 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 45% at 15% 85%, rgba(192, 132, 252, 0.12) 0%, transparent 70%);
+  filter: blur(48px);
+  opacity: 0.85;
 }
 
 .bg-ambient-overlay {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.18) 0%, transparent 65%),
-              linear-gradient(180deg, rgba(8, 8, 22, 0.75) 0%, rgba(15, 11, 36, 0.88) 50%, #080816 100%);
+  background: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 65%),
+              linear-gradient(180deg, rgba(8, 8, 22, 0.65) 0%, rgba(15, 11, 36, 0.85) 50%, #080816 100%);
 }
 
 @media (prefers-color-scheme: light) {
   .bg-ambient-image {
-    opacity: 0.12;
+    background-image:
+      radial-gradient(ellipse 60% 50% at 20% 15%, rgba(139, 92, 246, 0.14) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 80% 20%, rgba(244, 114, 182, 0.10) 0%, transparent 70%),
+      radial-gradient(ellipse 70% 60% at 50% 60%, rgba(99, 102, 241, 0.10) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 50% at 85% 85%, rgba(168, 85, 247, 0.12) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 45% at 15% 85%, rgba(192, 132, 252, 0.08) 0%, transparent 70%);
+    opacity: 0.7;
   }
   .bg-ambient-overlay {
-    background: radial-gradient(circle at 50% 0%, rgba(168, 85, 247, 0.12) 0%, transparent 65%),
-                linear-gradient(180deg, rgba(248, 247, 255, 0.85) 0%, rgba(241, 237, 255, 0.92) 50%, #F8F7FF 100%);
+    background: radial-gradient(circle at 50% 0%, rgba(168, 85, 247, 0.10) 0%, transparent 65%),
+                linear-gradient(180deg, rgba(248, 247, 255, 0.75) 0%, rgba(241, 237, 255, 0.88) 50%, #F8F7FF 100%);
   }
 }
 

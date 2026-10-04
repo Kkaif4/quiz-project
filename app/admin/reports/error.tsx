@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
-import { AlertCircle, RefreshCw, ShieldAlert, Home } from "lucide-react";
+import { RefreshCw, ShieldAlert, Home } from "lucide-react";
 
 export default function AdminReportsError({
   error,

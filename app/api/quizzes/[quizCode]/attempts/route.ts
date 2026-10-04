@@ -61,7 +61,7 @@ export async function POST(
     );
   }
 
-  // 4. Validate with SubmitAttemptSchema
+  // 4. Validate with SubmitAttemptSchema (enforces >=3s timing, nickname 1-30, etc.)
   const validation = SubmitAttemptSchema.safeParse(body);
   if (!validation.success) {
     const errorMessage =
@@ -81,11 +81,13 @@ export async function POST(
   try {
     await connectToDatabase();
 
-    // 5. Load full authoritative quiz with answers from DB
+    // 5. Load authoritative quiz with lean projection
     const quiz = await Quiz.findOne({
       code: quizCode.trim(),
       status: "active",
-    });
+    })
+      .select("questions settings _id code status")
+      .lean();
 
     if (!quiz) {
       return NextResponse.json(
@@ -152,44 +154,55 @@ export async function POST(
 
     const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
 
-    // 8. Generate unique attempt code
+    // 8. Generate attemptCode and insert directly (with duplicate index collision retry)
     let attemptCode = generateCode(8);
-    let collisionRetries = 0;
-
-    while (collisionRetries < 3) {
-      const existing = await Attempt.exists({ code: attemptCode });
-      if (!existing) break;
-      attemptCode = generateCode(8);
-      collisionRetries++;
-    }
-
     const userAgent = request.headers.get("user-agent") || null;
     const sanitizedNickname = sanitizeText(validatedData.nickname);
 
-    // 9. Save Attempt document
-    await Attempt.create({
-      code: attemptCode,
-      quizId: quiz._id,
-      nickname: sanitizedNickname,
-      answers: validatedData.answers,
-      score,
-      total,
-      percentage,
-      metadata: {
-        userAgent,
-        ipHash,
-      },
-    });
+    let created = false;
+    let retries = 0;
 
-    // 10. Atomically increment quiz stats
-    await Quiz.updateOne(
+    while (!created && retries < 3) {
+      try {
+        await Attempt.create({
+          code: attemptCode,
+          quizId: quiz._id,
+          nickname: sanitizedNickname,
+          answers: validatedData.answers,
+          score,
+          total,
+          percentage,
+          metadata: {
+            userAgent,
+            ipHash,
+          },
+        });
+        created = true;
+      } catch (err: unknown) {
+        if (
+          typeof err === "object" &&
+          err !== null &&
+          "code" in err &&
+          (err as { code: number }).code === 11000 &&
+          retries < 2
+        ) {
+          attemptCode = generateCode(8);
+          retries++;
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    // 9. Fire-and-forget non-blocking quiz stats increment
+    Quiz.updateOne(
       { _id: quiz._id },
       { $inc: { "stats.attempts": 1 } },
     ).catch((err) => {
       console.error("Failed to increment quiz attempts stat:", err);
     });
 
-    // 11. Return response matching AttemptSubmissionResult
+    // 10. Return response matching AttemptSubmissionResult
     const result: AttemptSubmissionResult = {
       attemptCode,
       nickname: sanitizedNickname,

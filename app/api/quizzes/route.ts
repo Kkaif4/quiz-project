@@ -87,18 +87,9 @@ export async function POST(request: Request) {
 
     // 6. Generate cryptographic identity tokens
     let quizCode = generateCode(8);
-    let collisionRetries = 0;
-
-    while (collisionRetries < 3) {
-      const existing = await Quiz.exists({ code: quizCode });
-      if (!existing) break;
-      quizCode = generateCode(8);
-      collisionRetries++;
-    }
-
     const ownerToken = generateOwnerToken();
     const ownerTokenHash = hashToken(ownerToken);
-    console.log(`[QuizCreate:${reqId}] Generated unique quizCode: ${quizCode}`);
+    console.log(`[QuizCreate:${reqId}] Generated initial quizCode: ${quizCode}`);
 
     // 7. Sanitize saved strings to protect against XSS and control characters
     const sanitizedTitle = sanitizeText(validatedData.title);
@@ -116,23 +107,43 @@ export async function POST(request: Request) {
       correctOptionId: q.correctOptionId,
     }));
 
-    // 8. Save Quiz document in MongoDB
+    // 8. Save Quiz document in MongoDB (direct insert with duplicate index retry)
     console.log(`[QuizCreate:${reqId}] Writing Quiz document to MongoDB...`);
-    const createdQuiz = await Quiz.create({
-      code: quizCode,
-      ownerTokenHash,
-      title: sanitizedTitle,
-      description: sanitizedDescription,
-      questions: sanitizedQuestions,
-      settings: validatedData.settings,
-      stats: {
-        attempts: 0,
-        shares: 0,
-        views: 0,
-      },
-      status: "active",
-    });
-    console.log(`[QuizCreate:${reqId}] Quiz document saved successfully! DB _id: ${createdQuiz._id}`);
+    let createdQuiz = null;
+    let retries = 0;
+
+    while (!createdQuiz && retries < 3) {
+      try {
+        createdQuiz = await Quiz.create({
+          code: quizCode,
+          ownerTokenHash,
+          title: sanitizedTitle,
+          description: sanitizedDescription,
+          questions: sanitizedQuestions,
+          settings: validatedData.settings,
+          stats: {
+            attempts: 0,
+            shares: 0,
+            views: 0,
+          },
+          status: "active",
+        });
+      } catch (err: unknown) {
+        if (
+          typeof err === "object" &&
+          err !== null &&
+          "code" in err &&
+          (err as { code: number }).code === 11000 &&
+          retries < 2
+        ) {
+          quizCode = generateCode(8);
+          retries++;
+        } else {
+          throw err;
+        }
+      }
+    }
+    console.log(`[QuizCreate:${reqId}] Quiz document saved successfully! DB _id: ${createdQuiz?._id}`);
 
     // 9. Update quiz_owner_tokens HTTP-only cookie
     let existingTokens: string[] = [];
@@ -142,7 +153,7 @@ export async function POST(request: Request) {
         const cookieStore = await cookies();
         rawCookie = cookieStore.get("quiz_owner_tokens")?.value;
       } catch {
-        // Fallback for edge / OpenNext environments
+        // Fallback for edge / serverless environments
         const cookieHeader = request.headers.get("cookie") || "";
         const match = cookieHeader.match(/quiz_owner_tokens=([^;]+)/);
         if (match) {

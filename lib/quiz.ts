@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { Types } from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { Quiz } from "@/models/Quiz";
@@ -12,183 +13,206 @@ import type {
   IUserQuizSummary,
 } from "@/types/quiz";
 
-
 export interface GetPublicQuizOptions {
   incrementViews?: boolean;
 }
 
 /**
+ * Internal cached query to load public quiz data by code.
+ * React.cache deduplicates calls between generateMetadata and Page components.
+ */
+const fetchPublicQuizByCode = cache(
+  async (code: string): Promise<IQuizPublic | null> => {
+    if (!code || typeof code !== "string") {
+      return null;
+    }
+
+    await connectToDatabase();
+
+    const quiz = await Quiz.findOne({
+      code: code.trim(),
+      status: "active",
+    })
+      .select("-ownerTokenHash -questions.correctOptionId")
+      .lean();
+
+    if (!quiz) {
+      return null;
+    }
+
+    // Explicit manual mapping to guarantee zero leak of internal or sensitive fields
+    const safeQuiz: IQuizPublic = {
+      code: quiz.code,
+      title: quiz.title,
+      description: quiz.description ?? "",
+      questions: quiz.questions.map((q) => ({
+        id: q.id,
+        text: q.text,
+        type: q.type ?? "single",
+        options: q.options.map((opt) => ({
+          id: opt.id,
+          text: opt.text,
+        })),
+      })),
+      settings: {
+        showScore: quiz.settings?.showScore ?? true,
+        showCorrectAnswers: quiz.settings?.showCorrectAnswers ?? false,
+        maxAttemptsPerPerson: quiz.settings?.maxAttemptsPerPerson ?? 1,
+      },
+      stats: {
+        attempts: quiz.stats?.attempts ?? 0,
+        shares: quiz.stats?.shares ?? 0,
+        views: quiz.stats?.views ?? 0,
+      },
+      status: quiz.status,
+      createdAt: quiz.createdAt,
+    };
+
+    return safeQuiz;
+  },
+);
+
+/**
  * Loads a public quiz by its unique code with strict answer key and token sanitization.
+ * Memoized via React.cache() per server request.
  *
  * CRITICAL SECURITY INVARIANT:
  * Zero Answer Key Leakage. The fields `ownerTokenHash` and `questions.correctOptionId`
  * are NEVER returned in the public object.
  */
-export async function getPublicQuizByCode(
-  code: string,
-  options?: GetPublicQuizOptions,
-): Promise<IQuizPublic | null> {
-  if (!code || typeof code !== "string") {
-    return null;
-  }
-
-  await connectToDatabase();
-
-  const quiz = await Quiz.findOne({
-    code: code.trim(),
-    status: "active",
-  })
-    .select("-ownerTokenHash -questions.correctOptionId")
-    .lean();
-
-  if (!quiz) {
-    return null;
-  }
-
-  if (options?.incrementViews) {
-    // Atomically increment views counter
-    await Quiz.updateOne(
-      { _id: quiz._id },
-      { $inc: { "stats.views": 1 } },
-    ).catch((err) => {
-      console.error("Failed to increment quiz views:", err);
-    });
-
-    if (quiz.stats) {
-      quiz.stats.views = (quiz.stats.views || 0) + 1;
+export const getPublicQuizByCode = cache(
+  async (
+    code: string,
+    options?: GetPublicQuizOptions,
+  ): Promise<IQuizPublic | null> => {
+    if (!code || typeof code !== "string") {
+      return null;
     }
-  }
 
-  // Explicit manual mapping to guarantee zero leak of internal or sensitive fields
-  const safeQuiz: IQuizPublic = {
-    code: quiz.code,
-    title: quiz.title,
-    description: quiz.description ?? "",
-    questions: quiz.questions.map((q) => ({
-      id: q.id,
-      text: q.text,
-      type: q.type ?? "single",
-      options: q.options.map((opt) => ({
-        id: opt.id,
-        text: opt.text,
-      })),
-    })),
-    settings: {
-      showScore: quiz.settings?.showScore ?? true,
-      showCorrectAnswers: quiz.settings?.showCorrectAnswers ?? false,
-      maxAttemptsPerPerson: quiz.settings?.maxAttemptsPerPerson ?? 1,
-    },
-    stats: {
-      attempts: quiz.stats?.attempts ?? 0,
-      shares: quiz.stats?.shares ?? 0,
-      views: quiz.stats?.views ?? 0,
-    },
-    status: quiz.status,
-    createdAt: quiz.createdAt,
-  };
+    const quiz = await fetchPublicQuizByCode(code.trim());
+    if (!quiz) {
+      return null;
+    }
 
-  return safeQuiz;
-}
+    if (options?.incrementViews) {
+      // Fire-and-forget non-blocking view counter increment
+      Quiz.updateOne(
+        { code: quiz.code },
+        { $inc: { "stats.views": 1 } },
+      ).catch((err) => {
+        console.error("Failed to increment quiz views:", err);
+      });
+    }
+
+    return quiz;
+  },
+);
 
 /**
  * Loads an attempt result safely by quizCode and attemptCode.
+ * Memoized via React.cache() per server request to deduplicate calls
+ * between generateMetadata and ResultPage.
  *
  * CRITICAL PRIVACY & SECURITY:
  * Never returns answer key, ipHash, or owner secret tokens.
  */
-export async function getAttemptResultByCode(
-  quizCode: string,
-  attemptCode: string,
-): Promise<IAttemptResultDetails | null> {
-  if (
-    !quizCode ||
-    typeof quizCode !== "string" ||
-    !attemptCode ||
-    typeof attemptCode !== "string"
-  ) {
-    return null;
-  }
+export const getAttemptResultByCode = cache(
+  async (
+    quizCode: string,
+    attemptCode: string,
+  ): Promise<IAttemptResultDetails | null> => {
+    if (
+      !quizCode ||
+      typeof quizCode !== "string" ||
+      !attemptCode ||
+      typeof attemptCode !== "string"
+    ) {
+      return null;
+    }
 
-  await connectToDatabase();
+    await connectToDatabase();
 
-  const attempt = await Attempt.findOne({
-    code: attemptCode.trim(),
-  }).lean();
+    const attempt = await Attempt.findOne({
+      code: attemptCode.trim(),
+    }).lean();
 
-  if (!attempt) {
-    return null;
-  }
+    if (!attempt) {
+      return null;
+    }
 
-  const quiz = await Quiz.findOne({
-    _id: attempt.quizId,
-    code: quizCode.trim(),
-  })
-    .select("title code status")
-    .lean();
+    const quiz = await Quiz.findOne({
+      _id: attempt.quizId,
+      code: quizCode.trim(),
+    })
+      .select("title code status")
+      .lean();
 
-  if (!quiz) {
-    return null;
-  }
+    if (!quiz) {
+      return null;
+    }
 
-  return {
-    attemptCode: attempt.code,
-    quizCode: quiz.code,
-    quizTitle: quiz.title,
-    nickname: attempt.nickname,
-    score: attempt.score,
-    total: attempt.total,
-    percentage: attempt.percentage,
-    createdAt: attempt.createdAt ? attempt.createdAt.toString() : new Date().toISOString(),
-  };
-}
+    return {
+      attemptCode: attempt.code,
+      quizCode: quiz.code,
+      quizTitle: quiz.title,
+      nickname: attempt.nickname,
+      score: attempt.score,
+      total: attempt.total,
+      percentage: attempt.percentage,
+      createdAt: attempt.createdAt ? attempt.createdAt.toString() : new Date().toISOString(),
+    };
+  },
+);
 
 /**
  * Loads an owner's quiz by their raw capability token.
  * Hashes token with SHA-256 for secure database lookup.
+ * Memoized via React.cache() per server request to deduplicate calls
+ * between generateMetadata and ManagePage.
  *
  * NOTE: The owner is authorized to review questions and answers,
  * so correctOptionId is retained, while ownerTokenHash is omitted.
  */
-export async function getOwnerQuizByToken(
-  rawToken: string,
-): Promise<IOwnerQuizDetails | null> {
-  if (!rawToken || typeof rawToken !== "string") {
-    return null;
-  }
+export const getOwnerQuizByToken = cache(
+  async (rawToken: string): Promise<IOwnerQuizDetails | null> => {
+    if (!rawToken || typeof rawToken !== "string") {
+      return null;
+    }
 
-  await connectToDatabase();
+    await connectToDatabase();
 
-  const hashedToken = hashToken(rawToken.trim());
-  const quiz = await Quiz.findOne({ ownerTokenHash: hashedToken }).lean();
+    const hashedToken = hashToken(rawToken.trim());
+    const quiz = await Quiz.findOne({ ownerTokenHash: hashedToken }).lean();
 
-  if (!quiz) {
-    return null;
-  }
+    if (!quiz) {
+      return null;
+    }
 
-  return {
-    _id: quiz._id,
-    code: quiz.code,
-    title: quiz.title,
-    description: quiz.description ?? "",
-    status: quiz.status,
-    stats: {
-      attempts: quiz.stats?.attempts ?? 0,
-      shares: quiz.stats?.shares ?? 0,
-      views: quiz.stats?.views ?? 0,
-    },
-    questions: quiz.questions.map((q) => ({
-      id: q.id,
-      text: q.text,
-      type: q.type ?? "single",
-      options: q.options.map((opt) => ({
-        id: opt.id,
-        text: opt.text,
+    return {
+      _id: quiz._id,
+      code: quiz.code,
+      title: quiz.title,
+      description: quiz.description ?? "",
+      status: quiz.status,
+      stats: {
+        attempts: quiz.stats?.attempts ?? 0,
+        shares: quiz.stats?.shares ?? 0,
+        views: quiz.stats?.views ?? 0,
+      },
+      questions: quiz.questions.map((q) => ({
+        id: q.id,
+        text: q.text,
+        type: q.type ?? "single",
+        options: q.options.map((opt) => ({
+          id: opt.id,
+          text: opt.text,
+        })),
+        correctOptionId: q.correctOptionId,
       })),
-      correctOptionId: q.correctOptionId,
-    })),
-    createdAt: quiz.createdAt ?? new Date(),
-  };
-}
+      createdAt: quiz.createdAt ?? new Date(),
+    };
+  },
+);
 
 /**
  * Loads leaderboard and chronological attempt history for a quiz owner dashboard.
@@ -216,6 +240,7 @@ export async function getQuizAttemptsForOwner(
     Attempt.find({ quizId })
       .sort({ createdAt: -1 })
       .limit(50)
+      .select("code nickname score total percentage answers createdAt")
       .lean(),
   ]);
 
@@ -300,5 +325,3 @@ export async function getQuizzesByOwnerTokens(
     createdAt: quiz.createdAt ?? new Date(),
   }));
 }
-
-

@@ -1,19 +1,17 @@
 import assert from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
-import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { Quiz } from "@/models/Quiz";
 import { Attempt } from "@/models/Attempt";
 import { Report } from "@/models/Report";
 import { hashToken, hashIp } from "@/lib/tokens";
-import { getPublicQuizByCode, getAttemptResultByCode, getOwnerQuizByToken } from "@/lib/quiz";
+import { getAttemptResultByCode, getOwnerQuizByToken } from "@/lib/quiz";
 import { POST as createQuizPost } from "@/app/api/quizzes/route";
 import { GET as getQuizGet, PATCH as updateQuizStatusPatch } from "@/app/api/quizzes/[quizCode]/route";
 import { POST as submitAttemptPost } from "@/app/api/quizzes/[quizCode]/attempts/route";
 import { POST as submitReportPost } from "@/app/api/reports/route";
 import { GET as adminReportsGet, PATCH as adminReportsPatch } from "@/app/api/admin/reports/route";
-import { quizCreateLimiter } from "@/lib/rate-limit";
 import { getFriendshipVerdict } from "@/lib/utils";
 
 // Load .env manually if needed
@@ -156,7 +154,7 @@ async function runE2EVerification() {
   const quizDoc = await Quiz.findOne({ code: quizCode }).lean();
   if (!quizDoc) throw new Error("Quiz must exist in DB");
   assert.strictEqual(quizDoc.ownerTokenHash, hashToken(ownerToken), "ownerTokenHash in DB must match hash of rawToken");
-  assert.strictEqual((quizDoc as any).ownerToken, undefined, "Raw ownerToken must NEVER be stored in DB");
+  assert.strictEqual((quizDoc as unknown as Record<string, unknown>).ownerToken, undefined, "Raw ownerToken must NEVER be stored in DB");
   console.log(" Invariant Passed: Raw ownerToken never saved to MongoDB, only SHA-256 hash.");
 
   // -------------------------------------------------------------------------
@@ -263,7 +261,7 @@ async function runE2EVerification() {
   const attemptDoc = await Attempt.findOne({ code: attemptCode }).lean();
   if (!attemptDoc || !attemptDoc.metadata) throw new Error("Attempt record must exist with metadata");
   assert.strictEqual(attemptDoc.metadata.ipHash, hashIp("198.51.100.42"), "Salted SHA-256 IP hash must be saved");
-  assert.strictEqual((attemptDoc.metadata as any).ip, undefined, "Raw IP address must NOT be stored in DB");
+  assert.strictEqual((attemptDoc.metadata as unknown as Record<string, unknown>).ip, undefined, "Raw IP address must NOT be stored in DB");
 
   // Check stats increment
   const updatedQuiz = await Quiz.findOne({ code: quizCode }).lean();

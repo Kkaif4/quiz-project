@@ -11,6 +11,7 @@ import {
   Plus,
   ShieldCheck,
 } from "lucide-react";
+import { Suspense } from "react";
 import { getQuizzesByOwnerTokens } from "@/lib/quiz";
 import { MyQuizzesSection } from "@/components/dashboard/MyQuizzesSection";
 
@@ -20,8 +21,11 @@ export const metadata: Metadata = {
     "Create your personalized friendship test in 60 seconds, share with friends, and see who knows you best.",
 };
 
-export default async function HomePage() {
-  // Read owner tokens from HTTP-only cookies in Next.js 16 Server Component
+/**
+ * Dynamic streaming Server Component for returning user quizzes.
+ * Wrapped in Suspense so the marketing hero and CTAs stream immediately.
+ */
+async function OwnerQuizzesLoader() {
   const cookieStore = await cookies();
   const rawCookie = cookieStore.get("quiz_owner_tokens")?.value;
 
@@ -42,6 +46,10 @@ export default async function HomePage() {
   const serverQuizzes =
     ownerTokens.length > 0 ? await getQuizzesByOwnerTokens(ownerTokens) : [];
 
+  return <MyQuizzesSection serverQuizzes={serverQuizzes} />;
+}
+
+export default function HomePage() {
   return (
     <div className="min-h-screen text-[var(--text-primary)] flex flex-col">
       {/* Navigation Header */}
@@ -70,8 +78,10 @@ export default async function HomePage() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 pt-8 sm:pt-14 pb-20 space-y-12 sm:space-y-16">
-        {/* Returning User Dashboard Drawer ("My Quizzes") */}
-        <MyQuizzesSection serverQuizzes={serverQuizzes} />
+        {/* Returning User Dashboard Drawer ("My Quizzes") - Streamed asynchronously */}
+        <Suspense fallback={null}>
+          <OwnerQuizzesLoader />
+        </Suspense>
 
         {/* Hero Section */}
         <section className="text-center space-y-5 max-w-2xl mx-auto">
