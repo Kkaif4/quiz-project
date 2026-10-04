@@ -79,6 +79,7 @@ async function runSeoTests() {
   assert.ok(allowed.includes("/create"), "Must allow '/create'");
   assert.ok(allowed.includes("/q/"), "Must allow '/q/'");
   assert.ok(allowed.includes("/api/og*"), "Must allow OpenGraph dynamic cards '/api/og*'");
+  assert.ok(allowed.includes("/ads.txt"), "Must allow '/ads.txt'");
 
   // Verify Disallowed paths
   const disallowed = Array.isArray(defaultRule.disallow) ? defaultRule.disallow : [defaultRule.disallow];
