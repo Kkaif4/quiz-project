@@ -52,14 +52,56 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
                 Array.isArray(data.data?.quizzes) &&
                 data.data.quizzes.length > 0
               ) {
+                const newQuizzes: IUserQuizSummary[] = data.data.quizzes;
+
+                // Sync newly discovered ownerTokens into client localStorage
+                try {
+                  if (window.localStorage) {
+                    const raw = localStorage.getItem("quiz_owner_tokens");
+                    const storedTokens: string[] = raw ? JSON.parse(raw) : [];
+                    const tokenSet = new Set(storedTokens);
+                    let tokensUpdated = false;
+
+                    for (const q of newQuizzes) {
+                      if (
+                        q.ownerToken &&
+                        typeof q.ownerToken === "string" &&
+                        q.ownerToken.length > 0 &&
+                        !tokenSet.has(q.ownerToken)
+                      ) {
+                        tokenSet.add(q.ownerToken);
+                        storedTokens.unshift(q.ownerToken);
+                        tokensUpdated = true;
+                      }
+                    }
+
+                    if (tokensUpdated) {
+                      localStorage.setItem(
+                        "quiz_owner_tokens",
+                        JSON.stringify(storedTokens.slice(0, 50)),
+                      );
+                    }
+                  }
+                } catch (storageErr) {
+                  console.warn("Could not sync tokens to localStorage:", storageErr);
+                }
+
+                // TASK-1003: Safe Deduplication & Merging (ownerToken never overwritten by empty string)
                 setQuizzes((prev) => {
                   const quizMap = new Map<string, IUserQuizSummary>();
                   for (const q of prev) {
                     quizMap.set(q.code, q);
                   }
-                  for (const q of data.data.quizzes) {
-                    if (!quizMap.has(q.code)) {
+                  for (const q of newQuizzes) {
+                    const existing = quizMap.get(q.code);
+                    if (!existing) {
                       quizMap.set(q.code, q);
+                    } else {
+                      quizMap.set(q.code, {
+                        ...existing,
+                        ...q,
+                        ownerToken: q.ownerToken || existing.ownerToken || "",
+                      });
                     }
                   }
                   return Array.from(quizMap.values()).sort(
@@ -120,7 +162,16 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
                     quizMap.set(q.code, q);
                   }
                   for (const q of fetchedQuizzes) {
-                    quizMap.set(q.code, q);
+                    const existing = quizMap.get(q.code);
+                    if (!existing) {
+                      quizMap.set(q.code, q);
+                    } else {
+                      quizMap.set(q.code, {
+                        ...existing,
+                        ...q,
+                        ownerToken: q.ownerToken || existing.ownerToken || "",
+                      });
+                    }
                   }
                   return Array.from(quizMap.values()).sort(
                     (a, b) =>
@@ -262,7 +313,7 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
                     className="min-h-[56px] py-4 px-4 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:brightness-110 active:scale-[0.98] transition-all font-bold text-xs sm:text-sm shadow-md shadow-violet-600/25 flex items-center justify-center gap-2 cursor-pointer glow-purple"
                   >
                     <KeyRound className="w-4 h-4 text-white/90" />
-                    <span>Manage</span>
+                    <span>Manage / Leaderboard</span>
                     <ChevronRight className="w-4 h-4 text-white/70 ml-auto sm:ml-0" />
                   </Link>
                 ) : (

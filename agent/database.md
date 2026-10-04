@@ -215,6 +215,7 @@ const UserSchema = new Schema<IUser>(
     },
     image: { type: String, default: null },
     status: { type: String, enum: ["active", "suspended"], default: "active" },
+    ownerTokens: { type: [String], default: [] },
   },
   { timestamps: true },
 );

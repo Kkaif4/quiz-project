@@ -325,3 +325,50 @@ export async function getQuizzesByOwnerTokens(
     createdAt: quiz.createdAt ?? new Date(),
   }));
 }
+
+/**
+ * Checks candidate owner tokens against a quiz by code.
+ * If one of the candidate tokens hashes to the quiz's ownerTokenHash, returns the matching raw token.
+ */
+export async function getMatchingOwnerToken(
+  quizCode: string,
+  candidateTokens: string[],
+): Promise<string | null> {
+  if (
+    !quizCode ||
+    typeof quizCode !== "string" ||
+    !Array.isArray(candidateTokens) ||
+    candidateTokens.length === 0
+  ) {
+    return null;
+  }
+
+  await connectToDatabase();
+
+  const tokenMap = new Map<string, string>();
+  for (const raw of candidateTokens) {
+    if (typeof raw === "string" && raw.trim().length > 0) {
+      const clean = raw.trim();
+      tokenMap.set(hashToken(clean), clean);
+    }
+  }
+
+  const hashes = Array.from(tokenMap.keys());
+  if (hashes.length === 0) {
+    return null;
+  }
+
+  const quiz = await Quiz.findOne({
+    code: quizCode.trim(),
+    ownerTokenHash: { $in: hashes },
+  })
+    .select("ownerTokenHash")
+    .lean();
+
+  if (!quiz || !quiz.ownerTokenHash) {
+    return null;
+  }
+
+  return tokenMap.get(quiz.ownerTokenHash) || null;
+}
+

@@ -74,6 +74,8 @@ export function QuizCreator({ initialTemplateId }: QuizCreatorProps) {
   const [honeypot, setHoneypot] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSuccessRedirecting, setIsSuccessRedirecting] = useState<boolean>(false);
+  const [createdManageUrl, setCreatedManageUrl] = useState<string>("");
 
   function createEmptyQuestion(num: number): QuestionEditorData {
     const qId = `q_${Date.now()}_${num}`;
@@ -367,10 +369,17 @@ export function QuizCreator({ initialTemplateId }: QuizCreatorProps) {
         console.warn("Could not save token to localStorage:", storageErr);
       }
 
-      // Smooth transition to management dashboard
-      startTransition(() => {
-        router.push(result.manageUrl);
-      });
+      // TASK-1006: Bulletproof immediate hard navigation to owner dashboard
+      setIsSuccessRedirecting(true);
+      setCreatedManageUrl(result.manageUrl);
+
+      if (typeof window !== "undefined") {
+        window.location.assign(result.manageUrl);
+      } else {
+        startTransition(() => {
+          router.push(result.manageUrl);
+        });
+      }
     } catch (err: unknown) {
       console.error("Submission error:", err);
       const errorMsg =
@@ -397,6 +406,43 @@ export function QuizCreator({ initialTemplateId }: QuizCreatorProps) {
         return <Sparkles className="w-4 h-4" />;
     }
   };
+
+  if (isSuccessRedirecting) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--bg-primary)]/90 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="card-surface rounded-3xl p-8 max-w-md w-full text-center space-y-5 shadow-2xl border border-violet-500/30">
+          <div className="w-16 h-16 rounded-2xl bg-violet-500/20 border border-violet-500/35 text-violet-300 mx-auto flex items-center justify-center shadow-xs glow-purple">
+            <Sparkles className="w-8 h-8 animate-pulse text-violet-300" />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">
+              Quiz Created Successfully!
+            </h2>
+            <p className="text-sm font-medium text-[var(--text-secondary)] leading-relaxed">
+              Redirecting you to your private Owner Dashboard &amp; live leaderboard...
+            </p>
+          </div>
+
+          <div className="flex items-center justify-center gap-2 text-violet-400 font-bold text-sm">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Loading Dashboard...</span>
+          </div>
+
+          {createdManageUrl && (
+            <div className="pt-2">
+              <a
+                href={createdManageUrl}
+                className="text-xs font-bold text-violet-300 hover:text-violet-100 underline transition-colors"
+              >
+                Click here if you are not redirected automatically &rarr;
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full pb-36">

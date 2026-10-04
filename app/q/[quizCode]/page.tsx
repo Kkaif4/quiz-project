@@ -1,14 +1,16 @@
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import Link from "next/link";
-import { Sparkles, Plus } from "lucide-react";
-import { getPublicQuizByCode } from "@/lib/quiz";
+import { Sparkles, Plus, Crown, ArrowRight } from "lucide-react";
+import { getPublicQuizByCode, getMatchingOwnerToken } from "@/lib/quiz";
 import { QuizPlayer } from "@/components/quiz/QuizPlayer";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getBaseUrl } from "@/lib/seo";
 
 interface QuizPageProps {
   params: Promise<{ quizCode: string }>;
+  searchParams?: Promise<{ preview?: string }>;
 }
 
 export async function generateMetadata({
@@ -56,8 +58,50 @@ export async function generateMetadata({
   };
 }
 
-export default async function QuizPage({ params }: QuizPageProps) {
+export default async function QuizPage({
+  params,
+  searchParams,
+}: QuizPageProps) {
   const { quizCode } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const preview = resolvedSearchParams?.preview;
+
+  // TASK-1004: Server-Side Owner Detection via HTTP-only cookie
+  let matchedToken: string | null = null;
+  try {
+    const cookieStore = await cookies();
+    const rawCookie = cookieStore.get("quiz_owner_tokens")?.value;
+    let candidateTokens: string[] = [];
+
+    if (rawCookie) {
+      try {
+        const parsed = JSON.parse(rawCookie);
+        if (Array.isArray(parsed)) {
+          candidateTokens = parsed.filter(
+            (t): t is string => typeof t === "string" && t.length > 0,
+          );
+        }
+      } catch {
+        if (rawCookie.trim()) {
+          candidateTokens = [rawCookie.trim()];
+        }
+      }
+    }
+
+    if (candidateTokens.length > 0) {
+      matchedToken = await getMatchingOwnerToken(quizCode, candidateTokens);
+    }
+  } catch (err) {
+    console.warn("Owner cookie check warning:", err);
+  }
+
+  // Automatic redirect if owner and not in preview mode
+  if (matchedToken) {
+    if (preview !== "true") {
+      redirect(`/manage/${matchedToken}`);
+    }
+  }
+
   const quiz = await getPublicQuizByCode(quizCode, { incrementViews: true });
 
   if (!quiz) {
@@ -145,9 +189,32 @@ export default async function QuizPage({ params }: QuizPageProps) {
         </div>
       </header>
 
+      {/* TASK-1004: Owner Preview Floating Banner */}
+      {matchedToken && preview === "true" && (
+        <div className="bg-gradient-to-r from-violet-900/90 via-purple-900/90 to-indigo-900/90 border-b border-violet-500/40 px-4 py-2.5 backdrop-blur-md sticky top-16 z-20">
+          <div className="max-w-2xl mx-auto flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2 text-violet-200 font-medium">
+              <Crown className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>Owner Preview Mode &mdash; You created this quiz.</span>
+            </div>
+            <Link
+              href={`/manage/${matchedToken}`}
+              className="px-3 py-1.5 rounded-xl bg-violet-500/30 hover:bg-violet-500/50 border border-violet-400/40 text-violet-100 font-bold transition-all flex items-center gap-1.5 shrink-0 active:scale-95 text-xs"
+            >
+              <span>Go to Owner Dashboard</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Main Game Screen */}
       <main className="flex-1 max-w-2xl w-full mx-auto px-4 py-4 sm:py-6 flex flex-col">
-        <QuizPlayer quiz={quiz} />
+        <QuizPlayer
+          quiz={quiz}
+          matchedOwnerToken={matchedToken || undefined}
+          isPreview={preview === "true"}
+        />
       </main>
     </div>
   );

@@ -57,6 +57,10 @@ const UserSchema = new Schema<IUser>(
       enum: ["active", "suspended"],
       default: "active",
     },
+    ownerTokens: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,

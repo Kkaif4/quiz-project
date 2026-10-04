@@ -176,6 +176,7 @@ export interface IUser {
   email?: string;
   image?: string | null;
   status: UserStatus;
+  ownerTokens?: string[];
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }
@@ -306,6 +307,16 @@ export interface UpdateQuizStatusInput {
 
 export interface SyncOwnerQuizzesInput {
   tokens: string[];
+}
+
+export interface OwnerCheckInput {
+  tokens?: string[];
+  clientFingerprint?: string;
+}
+
+export interface OwnerCheckResult {
+  isOwner: boolean;
+  ownerToken: string | null;
 }
 
 export type AdminModerationAction =

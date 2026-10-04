@@ -236,5 +236,24 @@ export const IdentifyUserSchema = z.object({
 
 export type IdentifyUserInputSchemaType = z.infer<typeof IdentifyUserSchema>;
 
+/**
+ * Zod schema for checking quiz ownership (POST /api/quizzes/[quizCode]/owner-check).
+ */
+export const OwnerCheckSchema = z.object({
+  tokens: z
+    .array(z.string().trim().min(1, "Token cannot be empty"))
+    .max(50, "Cannot check more than 50 tokens")
+    .optional(),
+  clientFingerprint: z
+    .string()
+    .trim()
+    .min(8, "Fingerprint must be at least 8 characters")
+    .max(64, "Fingerprint too long")
+    .optional()
+    .or(z.literal("")),
+});
+
+export type OwnerCheckInputSchemaType = z.infer<typeof OwnerCheckSchema>;
+
 
 

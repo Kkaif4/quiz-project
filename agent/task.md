@@ -1,28 +1,29 @@
 # Task Execution & Progress Tracker (`task.md`)
 
-> **Document Version**: `v1.5.0`  
+> **Document Version**: `v1.6.0`  
 > **Last Updated**: `2026-10-05`  
-> **Active Phase**: `Phase 9: Comprehensive SEO & Google Search Indexing Architecture`  
+> **Active Phase**: `Phase 10: Owner Recognition, Dashboard Auto-Routing & Play Screen Protection`  
 > **Rule for Agents**: Update this file immediately after completing or beginning any task. Increment version (`v1.0.1`, `v1.1.0`) when phases or major milestones change.
 
 ---
 
 ## 1. Progress Dashboard
 
-| Phase         | Milestone Description                          | Priority    | Status         | Tasks Completed |
-| :------------ | :--------------------------------------------- | :---------- | :------------- | :-------------- |
-| **Phase 1**   | Foundation, Schemas & Validation               | **P0**      | ✅ `COMPLETED` | 5 / 5           |
-| **Phase 2**   | Server Protection, Rate Limiting & Scoring API | **P0 / P1** | ✅ `COMPLETED` | 5 / 5           |
-| **Phase 3**   | Core Viral Loop & Frontend UX                  | **P0 / P1** | ✅ `COMPLETED` | 3 / 3           |
-| **Phase 3.5** | Design System & Mobile UX Overhaul             | **P0 / P1** | ✅ `COMPLETED` | 6 / 6           |
-| **Phase 4**   | Owner Management & Dashboard                   | **P1**      | ✅ `COMPLETED` | 4 / 4           |
-| **Phase 5**   | Server Hardening, Security & Anti-Abuse        | **P1 / P2** | ✅ `COMPLETED` | 4 / 4           |
-| **Phase 6**   | Viral Polish & Verification Checklist          | **P2 / P0** | ✅ `COMPLETED` | 3 / 3           |
-| **Phase 7**   | Performance Incident & Vercel Migration        | **P0 / P1** | ✅ `COMPLETED` | 8 / 8           |
-| **Phase 8**   | Browser Blueprint & Creator Identity           | **P0 / P1** | ✅ `COMPLETED` | 8 / 8           |
-| **Phase 9**   | SEO & Google Search Indexing Architecture      | **P0 / P1** | ✅ `COMPLETED` | 10 / 10         |
+| Phase         | Milestone Description                          | Priority    | Status            | Tasks Completed |
+| :------------ | :--------------------------------------------- | :---------- | :---------------- | :-------------- |
+| **Phase 1**   | Foundation, Schemas & Validation               | **P0**      | ✅ `COMPLETED`    | 5 / 5           |
+| **Phase 2**   | Server Protection, Rate Limiting & Scoring API | **P0 / P1** | ✅ `COMPLETED`    | 5 / 5           |
+| **Phase 3**   | Core Viral Loop & Frontend UX                  | **P0 / P1** | ✅ `COMPLETED`    | 3 / 3           |
+| **Phase 3.5** | Design System & Mobile UX Overhaul             | **P0 / P1** | ✅ `COMPLETED`    | 6 / 6           |
+| **Phase 4**   | Owner Management & Dashboard                   | **P1**      | ✅ `COMPLETED`    | 4 / 4           |
+| **Phase 5**   | Server Hardening, Security & Anti-Abuse        | **P1 / P2** | ✅ `COMPLETED`    | 4 / 4           |
+| **Phase 6**   | Viral Polish & Verification Checklist          | **P2 / P0** | ✅ `COMPLETED`    | 3 / 3           |
+| **Phase 7**   | Performance Incident & Vercel Migration        | **P0 / P1** | ✅ `COMPLETED`    | 8 / 8           |
+| **Phase 8**   | Browser Blueprint & Creator Identity           | **P0 / P1** | ✅ `COMPLETED`    | 8 / 8           |
+| **Phase 9**   | SEO & Google Search Indexing Architecture      | **P0 / P1** | ✅ `COMPLETED`    | 10 / 10         |
+| **Phase 10**  | Owner Recognition & Dashboard Auto-Routing     | **P0**      | ✅ `COMPLETED`    | 7 / 7           |
 
-**Total Progress**: `56 / 56 Tasks (100%)`
+**Total Progress**: `63 / 63 Tasks (100%)`
 
 ---
 
@@ -314,10 +315,37 @@
 
 ---
 
+### Phase 10: Owner Recognition, Dashboard Auto-Routing & Play Screen Protection (P0)
+
+- [x] **TASK-1001** `[P0]`: **User Model & Token Persistence** (`models/User.ts`, `types/quiz.ts`, `app/api/quizzes/route.ts`)
+  - Add `ownerTokens: { type: [String], default: [] }` to `UserSchema` and `ownerTokens?: string[]` to `IUser`.
+  - In `POST /api/quizzes`: Save `ownerToken` into `user.ownerTokens` via `$addToSet: { ownerTokens: ownerToken }`.
+- [x] **TASK-1002** `[P0]`: **Blueprint Identify Owner Token Hydration** (`app/api/users/identify/route.ts`)
+  - In `/api/users/identify`: Query user quizzes and map `ownerToken` using `user.ownerTokens`.
+  - Include `ownerToken` in the response so returning users always receive their management capability tokens.
+- [x] **TASK-1003** `[P0]`: **Safe Deduplication & Navigation in MyQuizzesSection** (`components/dashboard/MyQuizzesSection.tsx`)
+  - Fix deduplication/merging so `ownerToken` is never overwritten by empty strings or lost during blueprint/token sync.
+  - Sync any newly discovered `ownerTokens` from the user profile back into `localStorage`.
+- [x] **TASK-1004** `[P0]`: **Server-Side Owner Detection & Dashboard Redirection** (`lib/quiz.ts` & `app/q/[quizCode]/page.tsx`)
+  - Implement `getMatchingOwnerToken(quizCode, candidateTokens)` in `lib/quiz.ts`.
+  - In `app/q/[quizCode]/page.tsx`, check `cookies().get("quiz_owner_tokens")`. If matched and `searchParams.preview !== "true"`, automatically `redirect("/manage/" + matchedToken)`.
+  - If `searchParams.preview === "true"`, render Owner Preview Banner linking back to `/manage/[token]`.
+- [x] **TASK-1005** `[P0]`: **Client-Side Owner Check & Fallback Shield** (`app/api/quizzes/[quizCode]/owner-check/route.ts` & `components/quiz/QuizPlayer.tsx`)
+  - Create `/api/quizzes/[quizCode]/owner-check` route to verify candidate tokens or client fingerprint against `ownerTokenHash` / `ownerId`.
+  - In `QuizPlayer.tsx`, if identified as owner, do NOT force into nickname or quiz questions. Render Owner Recognition Card with primary button to `/manage/[ownerToken]`, share link, and preview mode toggle.
+- [x] **TASK-1006** `[P0]`: **Bulletproof Quiz Creation Redirect** (`components/quiz/QuizCreator.tsx`)
+  - Show celebratory "Quiz Published! Loading your dashboard..." overlay upon creation.
+  - Use `window.location.assign(result.manageUrl)` for guaranteed navigation on all devices with manual fallback link.
+- [x] **TASK-1007** `[P0]`: **E2E & Unit Test Coverage** (`tests/owner_flow.test.ts` & `tests/e2e_loop.test.ts`)
+  - Add tests validating that owner tokens are saved to the user profile, hydrated during blueprint identify, verified in `owner-check`, and that owners are routed to their dashboard instead of taking the quiz.
+
+---
+
 ## 3. Version History & Changelog
 
 | Version  | Date         | Changes Summary                                                                                                                                                                                                                                                       |
 | :------- | :----------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `v1.6.0` | `2026-10-05` | Added Phase 10: Owner Recognition, Dashboard Auto-Routing & Play Screen Protection (TASK-1001 through TASK-1007). Added user model ownerToken persistence, blueprint token hydration, server-side owner redirect on /q/[quizCode], client owner shield in QuizPlayer, and bulletproof creation navigation. |
 | `v1.5.0` | `2026-10-05` | Added Phase 9: Comprehensive SEO & Google Search Indexing Architecture (TASK-901 through TASK-910). Adding dynamic sitemap with 1h ISR, robots.txt, PWA manifest, XSS-safe JSON-LD, zero-leakage Quiz schema, FAQ accordion, canonical tags, and cloaking layouts. |
 | `v1.4.0` | `2026-10-05` | Added Phase 8: Browser Blueprint User Identification & Creator Name Flow (TASK-801 through TASK-808). Added zero-dependency Web Crypto fingerprinting, activated User model with salted IP hashing, mandatory creator name in QuizCreator, and returning user recovery. |
 | `v1.3.0` | `2026-10-05` | Added Phase 7: Performance Incident & Vercel Migration Optimization (TASK-701 through TASK-708). Pivoting from Cloudflare Workers to Vercel, stripping DoH DNS overhead, adding React.cache deduplication, eliminating 2.4MB asset bloat, and streaming SSR.           |
@@ -331,4 +359,5 @@
 | `v1.0.2` | `2026-10-02` | Completed Phase 2 (TASK-201 through TASK-205): Rate limiting, quiz creation, public loader, scoring, and reports.                                                                                                                                                     |
 | `v1.0.1` | `2026-10-02` | Completed Phase 1 (TASK-101 through TASK-105): dependencies, models, singleton pool, validation, and token utilities.                                                                                                                                                 |
 | `v1.0.0` | `2026-10-02` | Initial task tracker created from Implementation Plan.                                                                                                                                                                                                                |
+
 

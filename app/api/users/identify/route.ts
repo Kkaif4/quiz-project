@@ -3,7 +3,7 @@ import { IdentifyUserSchema } from "@/lib/validation";
 import { connectToDatabase } from "@/lib/db";
 import { User } from "@/models/User";
 import { Quiz } from "@/models/Quiz";
-import { hashIp } from "@/lib/tokens";
+import { hashIp, hashToken } from "@/lib/tokens";
 import {
   userIdentifyLimiter,
   getClientIp,
@@ -82,13 +82,25 @@ export async function POST(request: Request) {
       { ipHash, lastSeenAt: new Date() },
     ).catch(console.error);
 
-    // 6. Fetch all active quizzes created by this user
+    // 6. Compute hash map for user.ownerTokens to hydrate raw ownerToken
+    const tokenMap = new Map<string, string>();
+    (user.ownerTokens || []).forEach((t: string) => {
+      if (t && typeof t === "string") {
+        const clean = t.trim();
+        tokenMap.set(hashToken(clean), clean);
+      }
+    });
+
+    // 7. Fetch all active quizzes created by this user or matching ownerTokens
     const quizzes = await Quiz.find({
-      ownerId: user._id,
+      $or: [
+        { ownerId: user._id },
+        { ownerTokenHash: { $in: Array.from(tokenMap.keys()) } },
+      ],
       status: { $ne: "disabled" },
     })
       .sort({ createdAt: -1 })
-      .select("code title status stats createdAt")
+      .select("code title status stats ownerTokenHash createdAt")
       .lean();
 
     return NextResponse.json(
@@ -104,6 +116,7 @@ export async function POST(request: Request) {
             title: q.title,
             status: q.status,
             stats: q.stats,
+            ownerToken: tokenMap.get(q.ownerTokenHash) || "",
             createdAt: q.createdAt,
           })),
         },

@@ -126,6 +126,9 @@ export async function POST(request: Request) {
               lastSeenAt: new Date(),
               status: "active",
             },
+            $addToSet: {
+              ownerTokens: ownerToken,
+            },
           },
           { returnDocument: "after", upsert: true },
         );
@@ -135,6 +138,7 @@ export async function POST(request: Request) {
           ipHash,
           lastSeenAt: new Date(),
           status: "active",
+          ownerTokens: [ownerToken],
         });
       }
     } catch (userErr) {

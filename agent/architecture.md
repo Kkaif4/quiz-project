@@ -206,3 +206,16 @@ lemon-quiz-meniac/
 4. **Defense-in-Depth Search Cloaking**:
    - Layouts `app/admin/layout.tsx` and `app/manage/[ownerToken]/layout.tsx` enforce `robots: { index: false, follow: false, noarchive: true }`.
    - `next.config.ts` injects `X-Robots-Tag: noindex, nofollow, noarchive` on `/manage/:path*` and `/admin/:path*`.
+
+---
+
+## 11. Owner Recognition, Dashboard Auto-Routing & Play Screen Protection
+
+To prevent quiz creators from accidentally taking their own quizzes or losing access to their dashboard, a multi-layered owner recognition shield is enforced:
+
+1. **User Profile Token Persistence**: When a quiz is created, its capability token is stored on the creator's `User` record (`$addToSet: { ownerTokens: ownerToken }`).
+2. **Returning User Token Hydration**: When `/api/users/identify` recovers an owner via browser fingerprint, all associated quizzes are hydrated with their raw `ownerToken` via a hash-lookup map (`hashToken(t) -> t`), ensuring homepage cards render `Manage / Leaderboard` (`/manage/[ownerToken]`) instead of `View Quiz`.
+3. **Server-Side Auto-Routing on `/q/[quizCode]`**: The server component `app/q/[quizCode]/page.tsx` checks `cookies().get("quiz_owner_tokens")`. If candidate tokens match `ownerTokenHash` and `searchParams.preview !== "true"`, the server immediately executes `redirect("/manage/" + matchedToken)`. If `preview === "true"`, it renders an **Owner Preview Floating Banner** with a direct link back to the dashboard.
+4. **Client-Side Shield & Owner Welcome Screen (`QuizPlayer.tsx`)**: If cookies were purged or blocked, `QuizPlayer` queries `/api/quizzes/[quizCode]/owner-check` using client tokens and browser fingerprint. If verified as owner, it renders the **Owner Welcome Screen** with actions to open the dashboard, copy the share link, or toggle preview mode. Creators are never forced to take their own quiz.
+5. **Bulletproof Creation Transition (`QuizCreator.tsx`)**: Displays an instant celebratory overlay upon creation and triggers `window.location.assign(result.manageUrl)` for guaranteed hard navigation across mobile browsers.
+

@@ -18,6 +18,9 @@
 - [ADR-009: Timing-Safe Admin Authentication & Dual-Layer Content Sanitization](#adr-009-timing-safe-admin-authentication--dual-layer-content-sanitization)
 - [ADR-010: DNS-over-HTTPS (DoH) SRV Resolution for Cloudflare Workers (Superseded)](#adr-010-dns-over-https-doh-srv-resolution-for-cloudflare-workers--edge-isolation)
 - [ADR-011: Migration to Vercel Serverless Architecture & Node.js Native Connection Pooling](#adr-011-migration-to-vercel-serverless-architecture--nodejs-native-connection-pooling)
+- [ADR-012: Browser Blueprint (Fingerprint) & Passwordless User Identity](#adr-012-browser-blueprint-fingerprint--passwordless-user-identity)
+- [ADR-013: Comprehensive SEO, Search Engine Indexing & Zero-Leakage Structured Data Architecture](#adr-013-comprehensive-seo-search-engine-indexing--zero-leakage-structured-data-architecture)
+- [ADR-014: Owner Recognition, Dashboard Auto-Routing & Play Screen Protection](#adr-014-owner-recognition-dashboard-auto-routing--play-screen-protection)
 
 ---
 
@@ -192,6 +195,24 @@
 - **Consequences**:
   - *Positive*: Maximizes Google SERP organic traffic with Rich Snippets (FAQ accordions, WebSite search action, Quiz badges); guarantees zero leakage of answer keys or owner capability tokens; protects crawl budget.
   - *Negative*: Result score pages are not indexed individually in Google Search (by design, to avoid duplicate content penalties).
+
+---
+
+### ADR-014: Owner Recognition, Dashboard Auto-Routing & Play Screen Protection
+
+- **Status**: Accepted
+- **Context**: When creators generate a quiz and share it to group chats (WhatsApp, Instagram Stories), they frequently tap their own shared link (`/q/[quizCode]`) or navigate back to the homepage. Previously, `/q/[quizCode]` had zero owner awareness, forcing the owner into entering a nickname and answering their own questions. Furthermore, when returning users were identified via browser blueprint, `/api/users/identify` returned quizzes without their `ownerToken`, causing the homepage cards to show "View Quiz" (`/q/[code]`) instead of "Manage" (`/manage/[token]`), leaving owners without an easy way to access their dashboard.
+- **Decision**:
+  1. *User Model Owner Token Persistence*: Store `ownerTokens: string[]` on the `User` schema. When a quiz is created, add the generated `ownerToken` to `user.ownerTokens` via `$addToSet`.
+  2. *Token Hydration in Blueprint Identity*: In `POST /api/users/identify`, compute a hash lookup map for `user.ownerTokens` and hydrate each quiz's `ownerToken` in the response so the homepage cards immediately render the `Manage / Leaderboard` link.
+  3. *Safe Client Deduplication*: In `MyQuizzesSection.tsx`, merge quizzes using a Map that never overwrites an existing `ownerToken` with an empty string, and backfills newly discovered tokens into `localStorage`.
+  4. *Server-Side Auto-Routing on `/q/[quizCode]`*: Check `cookies().get("quiz_owner_tokens")`. If candidate tokens match the quiz's `ownerTokenHash` and `searchParams.preview !== "true"`, automatically `redirect("/manage/" + matchedToken)`. If `preview === "true"`, render an Owner Preview Floating Banner with a one-click jump to the dashboard.
+  5. *Client-Side Owner Shield (`QuizPlayer.tsx`)*: If cookies are absent on the server, `QuizPlayer` queries `/api/quizzes/[quizCode]/owner-check` with client tokens and browser fingerprint. If verified as owner, display the **Owner Welcome Screen** with a prominent button to the dashboard, share link copy, and optional preview mode toggle.
+  6. *Bulletproof Post-Creation Navigation*: In `QuizCreator.tsx`, display a celebratory overlay on success and execute `window.location.assign(result.manageUrl)` for guaranteed hard navigation across mobile browsers.
+- **Consequences**:
+  - *Positive*: Creators are never forced to take their own quiz; their dashboard and live leaderboard are instantly accessible; returning users can manage all their quizzes even after cookie purges; zero answer key leakage is strictly preserved.
+  - *Negative*: Owners wanting to take their own quiz as an anonymous player must explicitly choose "Preview Mode" (`?preview=true`).
+
 
 
 
