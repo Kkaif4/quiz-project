@@ -68,6 +68,12 @@ export const metadata: Metadata = {
       "Create your personalized friendship test in 60 seconds, share with friends, and see who knows you best.",
     images: ["/api/og?type=home"],
   },
+  verification: {
+    google: [
+      "CzY4LArjfmtusUoJx74s6pssE-zwo4UiT_fJvJGoYLQ",
+      "CUJwVLOe6GlodleCrDikkTAsHdO-W4cOzrkScyBEN4M",
+    ],
+  },
 };
 
 export default function RootLayout({

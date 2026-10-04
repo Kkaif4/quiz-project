@@ -266,8 +266,34 @@ async function runSeoTests() {
   );
   console.log("  ✔ Result page correctly consolidates link equity to root quiz and sets noindex robots.\n");
 
+  // 11. Google Site Verification Meta Tag (app/layout.tsx & app/page.tsx)
+  console.log("▶ [TEST 11] Testing Google Site Verification Meta Tag (Layout & Home)...");
+  const layoutContent = fs.readFileSync(path.resolve(process.cwd(), "app/layout.tsx"), "utf-8");
+  assert.ok(
+    layoutContent.includes("CzY4LArjfmtusUoJx74s6pssE-zwo4UiT_fJvJGoYLQ"),
+    "app/layout.tsx must configure HTML tag token in verification.google",
+  );
+  assert.ok(
+    layoutContent.includes("CUJwVLOe6GlodleCrDikkTAsHdO-W4cOzrkScyBEN4M"),
+    "app/layout.tsx must configure DNS verification token in verification.google",
+  );
+
+  const homeGoogle = Array.isArray(homeMetadata.verification?.google)
+    ? homeMetadata.verification.google
+    : [homeMetadata.verification?.google];
+
+  assert.ok(
+    homeGoogle.includes("CzY4LArjfmtusUoJx74s6pssE-zwo4UiT_fJvJGoYLQ"),
+    "Homepage metadata must include HTML tag verification token",
+  );
+  assert.ok(
+    homeGoogle.includes("CUJwVLOe6GlodleCrDikkTAsHdO-W4cOzrkScyBEN4M"),
+    "Homepage metadata must include secondary verification token",
+  );
+  console.log("  ✔ Google Site Verification meta tags (HTML tag + DNS) configured on root layout and homepage.\n");
+
   console.log("=================================================================");
-  console.log("   🎉 ALL 10 SEO & SEARCH ENGINE INDEXING TESTS PASSED!          ");
+  console.log("   🎉 ALL 11 SEO & SEARCH ENGINE INDEXING TESTS PASSED!          ");
   console.log("=================================================================\n");
 }
 
