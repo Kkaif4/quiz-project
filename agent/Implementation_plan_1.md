@@ -1,6 +1,6 @@
 # Implementation Plan: Friendship Quiz MVP
 
-This implementation plan synthesizes the specifications from [MVP.md](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/agent/MVP.md) and [Schema.md](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/agent/Schema.md). It outlines the architecture, data validation rules, security hardening (rate limiting, hashing, server-side scoring, sanitization), and a phase-by-phase task breakdown with explicit priorities (**P0**, **P1**, **P2**).
+This implementation plan synthesizes the specifications from [MVP.md](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/agent/MVP.md) and [Schema.md](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/agent/Schema.md). It outlines the architecture, data validation rules, security hardening (rate limiting, hashing, server-side scoring, sanitization), and a phase-by-phase task breakdown with explicit priorities (**P0**, **P1**, **P2**).
 
 ---
 
@@ -70,26 +70,26 @@ This implementation plan synthesizes the specifications from [MVP.md](file:///ho
   - Configure `.env.example` with `MONGODB_URI`, `APP_URL`, `TOKEN_SALT`, `RATE_LIMIT_ENABLED`.
   - Next.js 16 / React 19 compatibility audit (ensure async `params` and `searchParams` conventions are followed).
 - [ ] **Task 1.2: MongoDB Connection Pooling** `[P0]`
-  - Create [lib/db.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/lib/db.ts) implementing cached connection singleton for serverless Next.js execution.
+  - Create [lib/db.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/lib/db.ts) implementing cached connection singleton for serverless Next.js execution.
   - Add connection event logging and graceful disconnect handlers.
 - [ ] **Task 1.3: Mongoose Schemas & Indexes** `[P0]`
-  - Implement [models/Quiz.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/models/Quiz.ts):
+  - Implement [models/Quiz.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/models/Quiz.ts):
     - Embedded `QuizQuestionSchema` (with validator for 2–6 options).
     - Unique index on `code` and `ownerTokenHash`.
     - Index on `status`, `ownerId`.
-  - Implement [models/Attempt.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/models/Attempt.ts):
+  - Implement [models/Attempt.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/models/Attempt.ts):
     - Unique index on `code`.
     - Compound indexes: `{ quizId: 1, createdAt: -1 }` and `{ quizId: 1, score: -1 }`.
-  - Implement [models/Report.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/models/Report.ts):
+  - Implement [models/Report.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/models/Report.ts):
     - Index on `quizId` and `status`.
-  - Implement [models/User.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/models/User.ts) (placeholder for future OAuth claim flow).
+  - Implement [models/User.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/models/User.ts) (placeholder for future OAuth claim flow).
 - [ ] **Task 1.4: Validation Engine (Zod)** `[P0]`
-  - Create [lib/validation.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/lib/validation.ts):
+  - Create [lib/validation.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/lib/validation.ts):
     - `CreateQuizSchema` (validating limits: 3–15 questions, 2–6 options, correct answer presence).
     - `SubmitAttemptSchema` (validating nickname length, answers array structure).
     - `CreateReportSchema` (validating categories and description limit).
 - [ ] **Task 1.5: Crypto & Token Utilities** `[P0]`
-  - Create [lib/tokens.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/lib/tokens.ts):
+  - Create [lib/tokens.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/lib/tokens.ts):
     - `generateOwnerToken()`: 32 cryptographically secure random bytes (64 hex characters).
     - `hashToken(token: string)`: SHA-256 hashing.
     - `generateCode(length: number)`: URL-friendly nano code (`[a-zA-Z0-9]`).
@@ -102,7 +102,7 @@ This implementation plan synthesizes the specifications from [MVP.md](file:///ho
 > **Goal**: Build bulletproof APIs with built-in rate limiting, server-side scoring, input sanitization, and answer sanitization.
 
 - [ ] **Task 2.1: Server Rate Limiter Engine** `[P0]`
-  - Create [lib/rate-limit.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/lib/rate-limit.ts):
+  - Create [lib/rate-limit.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/lib/rate-limit.ts):
     - Token-bucket / sliding window in-memory rate limiter with LRU cache cleanup (zero external dependencies required for MVP, easily swappable with Upstash Redis later).
     - Configurable presets:
       - `quizCreate`: 5 req / hour per IP.
@@ -110,7 +110,7 @@ This implementation plan synthesizes the specifications from [MVP.md](file:///ho
       - `quizReport`: 3 req / hour per IP.
     - Returns headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `Retry-After`.
 - [ ] **Task 2.2: Quiz Creation API (`POST /api/quizzes`)** `[P0]`
-  - Implement [app/api/quizzes/route.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/api/quizzes/route.ts):
+  - Implement [app/api/quizzes/route.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/api/quizzes/route.ts):
     - Apply rate limiting & body size validation.
     - Validate payload with `CreateQuizSchema`.
     - Generate unique public `quizCode` and private `ownerToken`.
@@ -118,12 +118,12 @@ This implementation plan synthesizes the specifications from [MVP.md](file:///ho
     - Append owner token into HTTP-only cookie `quiz_owner_tokens`.
     - Return `quizCode`, raw `ownerToken`, and `manageUrl`.
 - [ ] **Task 2.3: Public Quiz Retrieval API & Server Action** `[P0]`
-  - Implement public loader function in [lib/quiz.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/lib/quiz.ts):
+  - Implement public loader function in [lib/quiz.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/lib/quiz.ts):
     - Query active quiz by `code`.
     - **Crucial Security Step**: Project out `ownerTokenHash` and `questions.correctOptionId`.
     - Increment views counter atomically (`$inc: { "stats.views": 1 }`).
 - [ ] **Task 2.4: Attempt Submission & Server-Side Scoring (`POST /api/quizzes/[quizCode]/attempts`)** `[P0]`
-  - Implement [app/api/quizzes/[quizCode]/attempts/route.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/api/quizzes/[quizCode]/attempts/route.ts):
+  - Implement [app/api/quizzes/[quizCode]/attempts/route.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/api/quizzes/[quizCode]/attempts/route.ts):
     - Rate limit check and honeypot validation.
     - Validate with `SubmitAttemptSchema`.
     - Load full quiz (including `correctOptionId`).
@@ -133,7 +133,7 @@ This implementation plan synthesizes the specifications from [MVP.md](file:///ho
     - Atomically increment quiz stats (`$inc: { "stats.attempts": 1 }`).
     - Return `attemptCode`, `score`, `total`, `percentage`.
 - [ ] **Task 2.5: Abuse Reporting API (`POST /api/reports`)** `[P1]`
-  - Implement [app/api/reports/route.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/api/reports/route.ts):
+  - Implement [app/api/reports/route.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/api/reports/route.ts):
     - Rate limit check.
     - Validate payload with `CreateReportSchema`.
     - Create pending Report record in MongoDB.
@@ -145,19 +145,19 @@ This implementation plan synthesizes the specifications from [MVP.md](file:///ho
 > **Goal**: Deliver a polished, mobile-first frontend supporting the viral loop: Create → Share → Answer → Result → Create.
 
 - [ ] **Task 3.1: Starter Templates & Quiz Creation Page** `[P0]`
-  - Create [lib/templates.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/lib/templates.ts) with preset themes:
+  - Create [lib/templates.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/lib/templates.ts) with preset themes:
     - _"Best Friend Test"_ (7 fun questions).
     - _"How Well Do You Know Me?"_ (7 lifestyle questions).
     - _"Funny Friend Test"_ (7 silly dilemmas).
     - _"My Favorites"_ (food, movie, hobby, vacation).
-  - Implement [components/quiz/QuizCreator.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/components/quiz/QuizCreator.tsx) & [components/quiz/QuestionEditor.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/components/quiz/QuestionEditor.tsx):
+  - Implement [components/quiz/QuizCreator.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/components/quiz/QuizCreator.tsx) & [components/quiz/QuestionEditor.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/components/quiz/QuestionEditor.tsx):
     - Clean question list with add/remove/reorder.
     - Options input with radio selection for the correct answer.
     - Template selector modal/drawer.
     - Form validation feedback before submission.
-  - Implement [app/create/page.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/create/page.tsx).
+  - Implement [app/create/page.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/create/page.tsx).
 - [ ] **Task 3.2: Public Quiz Taking Page (`/q/[quizCode]`)** `[P0]`
-  - Implement [app/q/[quizCode]/page.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/q/[quizCode]/page.tsx) and [components/quiz/QuizPlayer.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/components/quiz/QuizPlayer.tsx):
+  - Implement [app/q/[quizCode]/page.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/q/[quizCode]/page.tsx) and [components/quiz/QuizPlayer.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/components/quiz/QuizPlayer.tsx):
     - Async Next 16 params resolution.
     - Nickname prompt screen.
     - Step-by-step or clean single-scroll question cards with active animations.
@@ -166,7 +166,7 @@ This implementation plan synthesizes the specifications from [MVP.md](file:///ho
     - Submit handler dispatching to attempts API.
     - Report Quiz button with modal dialog.
 - [ ] **Task 3.3: Result Page & Viral Hook (`/q/[quizCode]/result/[attemptCode]`)** `[P0]`
-  - Implement [app/q/[quizCode]/result/[attemptCode]/page.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/q/[quizCode]/result/[attemptCode]/page.tsx) and [components/quiz/QuizResult.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/components/quiz/QuizResult.tsx):
+  - Implement [app/q/[quizCode]/result/[attemptCode]/page.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/q/[quizCode]/result/[attemptCode]/page.tsx) and [components/quiz/QuizResult.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/components/quiz/QuizResult.tsx):
     - Confetti celebration animation for scores > 70%.
     - Dynamic scorecard message based on percentage:
       - 90–100%: "True Soulmate! 🔥"
@@ -183,17 +183,17 @@ This implementation plan synthesizes the specifications from [MVP.md](file:///ho
 > **Goal**: Allow quiz creators to monitor live attempts, view rankings, copy private dashboard links, and manage quiz availability.
 
 - [ ] **Task 4.1: Owner Authentication via Token Hash** `[P1]`
-  - Implement server loader in [app/manage/[ownerToken]/page.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/manage/[ownerToken]/page.tsx):
+  - Implement server loader in [app/manage/[ownerToken]/page.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/manage/[ownerToken]/page.tsx):
     - Hash raw token using `hashToken(ownerToken)`.
     - Fetch Quiz matching `ownerTokenHash`.
     - Return 404/unauthorized UI if not found.
     - Fetch attempts for this quiz sorted by `score: -1` and `createdAt: -1`.
 - [ ] **Task 4.2: Owner Dashboard UI Components** `[P1]`
-  - Implement [components/dashboard/ResultList.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/components/dashboard/ResultList.tsx) & [components/dashboard/Ranking.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/components/dashboard/Ranking.tsx):
+  - Implement [components/dashboard/ResultList.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/components/dashboard/ResultList.tsx) & [components/dashboard/Ranking.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/components/dashboard/Ranking.tsx):
     - Summary stat cards: Total Views, Total Attempts, Average Score.
     - Leaderboard ranking with medal badges (🥇, 🥈, 🥉).
     - Chronological attempts table with nickname, score, and submission timestamp.
-  - Implement [components/quiz/ShareCard.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/components/quiz/ShareCard.tsx):
+  - Implement [components/quiz/ShareCard.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/components/quiz/ShareCard.tsx):
     - Public quiz link copy button with toast feedback.
     - Direct WhatsApp / Messenger / Twitter share buttons.
     - "Save Private Dashboard Link" alert box with one-click copy.
@@ -201,7 +201,7 @@ This implementation plan synthesizes the specifications from [MVP.md](file:///ho
   - Implement server action or route handler to toggle quiz status (`active` vs `disabled`).
   - Option to clear or delete test attempts.
 - [ ] **Task 4.4: "My Quizzes" Home Hub (`/`)** `[P1]`
-  - Implement [app/page.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/page.tsx):
+  - Implement [app/page.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/page.tsx):
     - Hero section with viral pitch and "Create Quiz in 60 Seconds" button.
     - Reads `quiz_owner_tokens` cookie (or localStorage fallback).
     - If owner tokens exist, fetch and display "Your Active Quizzes" cards with attempt counts.
@@ -213,7 +213,7 @@ This implementation plan synthesizes the specifications from [MVP.md](file:///ho
 > **Goal**: Fortify the application against malicious payloads, bot floods, and inappropriate user-generated content.
 
 - [ ] **Task 5.1: HTTP Security Headers & Middleware** `[P1]`
-  - Create [middleware.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/middleware.ts) or configure `next.config.ts` headers:
+  - Create [middleware.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/middleware.ts) or configure `next.config.ts` headers:
     - `Content-Security-Policy` (preventing inline XSS execution).
     - `X-Frame-Options: DENY` (clickjacking protection).
     - `X-Content-Type-Options: nosniff`.

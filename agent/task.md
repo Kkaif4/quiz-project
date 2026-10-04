@@ -33,25 +33,25 @@
   - Create `.env.example` with `MONGODB_URI`, `APP_URL`, `TOKEN_SALT`, `RATE_LIMIT_ENABLED`.
   - Validate Next.js 16 canary / React 19 compatibility.
 - [x] **TASK-102** `[P0]`: **MongoDB Connection Pooling Singleton**
-  - Implement [lib/db.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/lib/db.ts) with cached connection singleton pattern for hot serverless lambdas.
+  - Implement [lib/db.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/lib/db.ts) with cached connection singleton pattern for hot serverless lambdas.
   - Implement connection error handling and connection state listeners.
 - [x] **TASK-103** `[P0]`: **Mongoose Models & Indexes**
-  - Create [models/Quiz.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/models/Quiz.ts):
+  - Create [models/Quiz.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/models/Quiz.ts):
     - Embedded `QuizQuestionSchema` and `QuizOptionSchema`.
     - Unique indexes on `code` and `ownerTokenHash`.
-  - Create [models/Attempt.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/models/Attempt.ts):
+  - Create [models/Attempt.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/models/Attempt.ts):
     - Unique index on `code`.
     - Compound indexes: `{ quizId: 1, createdAt: -1 }` and `{ quizId: 1, score: -1 }`.
-  - Create [models/Report.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/models/Report.ts):
+  - Create [models/Report.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/models/Report.ts):
     - Indexed by `quizId` and `status`.
-  - Create [models/User.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/models/User.ts) (placeholder model for future account claiming).
+  - Create [models/User.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/models/User.ts) (placeholder model for future account claiming).
 - [x] **TASK-104** `[P0]`: **Zod Validation Schemas**
-  - Create [lib/validation.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/lib/validation.ts):
+  - Create [lib/validation.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/lib/validation.ts):
     - `CreateQuizSchema` (3–15 questions, 2–6 options, correct answer validation).
     - `SubmitAttemptSchema` (nickname 1–30 chars, answers array matching questions).
     - `CreateReportSchema` (reason enum, description max 500 chars).
 - [x] **TASK-105** `[P0]`: **Cryptographic & Token Utilities**
-  - Create [lib/tokens.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/lib/tokens.ts):
+  - Create [lib/tokens.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/lib/tokens.ts):
     - `generateOwnerToken()`: 32 cryptographically secure random bytes (64 hex characters).
     - `hashToken(token)`: SHA-256 token hashing.
     - `generateCode(length)`: Nano ID generator for `quizCode` and `attemptCode`.
@@ -62,33 +62,33 @@
 ### Phase 2: Server Protection, Rate Limiting & Scoring API (P0 / P1)
 
 - [x] **TASK-201** `[P0]`: **In-Memory Sliding-Window Rate Limiter**
-  - Create [lib/rate-limit.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/lib/rate-limit.ts) with LRU memory eviction.
+  - Create [lib/rate-limit.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/lib/rate-limit.ts) with LRU memory eviction.
   - Implement presets:
     - Quiz Creation: 5 req / IP / hour.
     - Attempt Submission: 10 req / IP / 10 min.
     - Abuse Report: 3 req / IP / hour.
 - [x] **TASK-202** `[P0]`: **Quiz Creation Route (`POST /api/quizzes`)**
-  - Implement [app/api/quizzes/route.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/api/quizzes/route.ts):
+  - Implement [app/api/quizzes/route.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/api/quizzes/route.ts):
     - Validate with `CreateQuizSchema` and rate limiting.
     - Generate `quizCode`, raw `ownerToken`, and `ownerTokenHash`.
     - Save quiz document in MongoDB.
     - Append raw token to `quiz_owner_tokens` HTTP-only cookie.
     - Return `quizCode`, `ownerToken`, and `manageUrl`.
 - [x] **TASK-203** `[P0]`: **Public Quiz Loader & Answer Key Sanitization**
-  - Implement loader in [lib/quiz.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/lib/quiz.ts):
+  - Implement loader in [lib/quiz.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/lib/quiz.ts):
     - Query active quiz by `code`.
     - Project out `ownerTokenHash` and `questions.correctOptionId` (CRITICAL SECURITY).
     - Increment views counter atomically (`$inc: { "stats.views": 1 }`).
-  - Implement [app/api/quizzes/[quizCode]/route.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/api/quizzes/%5BquizCode%5D/route.ts) with async params.
+  - Implement [app/api/quizzes/[quizCode]/route.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/api/quizzes/%5BquizCode%5D/route.ts) with async params.
 - [x] **TASK-204** `[P0]`: **Attempt Submission & Scoring Route (`POST /api/quizzes/[quizCode]/attempts`)**
-  - Implement [app/api/quizzes/[quizCode]/attempts/route.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/api/quizzes/%5BquizCode%5D/attempts/route.ts):
+  - Implement [app/api/quizzes/[quizCode]/attempts/route.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/api/quizzes/%5BquizCode%5D/attempts/route.ts):
     - Rate limit and honeypot validation.
     - Load full quiz with answers from MongoDB.
     - Compute score and percentage server-side.
     - Save Attempt document with `ipHash`.
     - Increment quiz stats (`$inc: { "stats.attempts": 1 }`).
 - [x] **TASK-205** `[P1]`: **Abuse Reporting Route (`POST /api/reports`)**
-  - Implement [app/api/reports/route.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/api/reports/route.ts):
+  - Implement [app/api/reports/route.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/api/reports/route.ts):
     - Rate limited submission of user reports with category and description.
     - Resolve quiz by ID or code and save pending report.
 
@@ -97,14 +97,14 @@
 ### Phase 3: Core Viral Loop & Frontend UX (P0 / P1)
 
 - [x] **TASK-301** `[P0]`: **Starter Templates & Quiz Creator Page**
-  - Create [lib/templates.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/lib/templates.ts) with 4 high-quality presets.
-  - Implement [components/quiz/QuizCreator.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/components/quiz/QuizCreator.tsx) and [components/quiz/QuestionEditor.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/components/quiz/QuestionEditor.tsx).
-  - Implement [app/create/page.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/create/page.tsx).
+  - Create [lib/templates.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/lib/templates.ts) with 4 high-quality presets.
+  - Implement [components/quiz/QuizCreator.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/components/quiz/QuizCreator.tsx) and [components/quiz/QuestionEditor.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/components/quiz/QuestionEditor.tsx).
+  - Implement [app/create/page.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/create/page.tsx).
 - [x] **TASK-302** `[P0]`: **Public Quiz Player Page (`/q/[quizCode]`)**
-  - Implement [app/q/[quizCode]/page.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/q/[quizCode]/page.tsx) and [components/quiz/QuizPlayer.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/components/quiz/QuizPlayer.tsx).
+  - Implement [app/q/[quizCode]/page.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/q/[quizCode]/page.tsx) and [components/quiz/QuizPlayer.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/components/quiz/QuizPlayer.tsx).
   - Include nickname prompt, progress indicator, 56px touch options, auto-advance, and subtle report modal.
 - [x] **TASK-303** `[P0]`: **Celebratory Result Page & Viral CTA (`/q/[quizCode]/result/[attemptCode]`)**
-  - Implement [app/q/[quizCode]/result/[attemptCode]/page.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/q/[quizCode]/result/[attemptCode]/page.tsx) and [components/quiz/QuizResult.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/components/quiz/QuizResult.tsx).
+  - Implement [app/q/[quizCode]/result/[attemptCode]/page.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/q/[quizCode]/result/[attemptCode]/page.tsx) and [components/quiz/QuizResult.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/components/quiz/QuizResult.tsx).
   - Particle explosion via `canvas-confetti`, dynamic roast/praise ratings, and primary CTA: **"Create Your Own Quiz"**.
 
 ---
@@ -153,17 +153,17 @@
 ### Phase 4: Owner Management & Dashboard (P1)
 
 - [x] **TASK-401** `[P1]`: **Owner Dashboard Server Page (`/manage/[ownerToken]`)**
-  - Implement [app/manage/[ownerToken]/page.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/manage/[ownerToken]/page.tsx) with token hashing lookup.
+  - Implement [app/manage/[ownerToken]/page.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/manage/[ownerToken]/page.tsx) with token hashing lookup.
 - [x] **TASK-402** `[P1]`: **Dashboard Ranking & Real-Time Stats UI**
-  - Implement [components/dashboard/Ranking.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/components/dashboard/Ranking.tsx) and [components/dashboard/ResultList.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/components/dashboard/ResultList.tsx).
-  - Implement [components/quiz/ShareCard.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/components/quiz/ShareCard.tsx) with copy link & direct WhatsApp triggers.
+  - Implement [components/dashboard/Ranking.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/components/dashboard/Ranking.tsx) and [components/dashboard/ResultList.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/components/dashboard/ResultList.tsx).
+  - Implement [components/quiz/ShareCard.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/components/quiz/ShareCard.tsx) with copy link & direct WhatsApp triggers.
 - [x] **TASK-403** `[P1]`: **Owner Quiz Controls & Backend API**
   - Add status toggle action (`active` vs `disabled`) with capability verification in `PATCH /api/quizzes/[quizCode]`.
   - Add `POST /api/quizzes/my-quizzes` for multi-quiz token sync.
-  - Implement owner queries `getOwnerQuizByToken`, `getQuizAttemptsForOwner`, `getQuizzesByOwnerTokens` in [lib/quiz.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/lib/quiz.ts).
-  - Add Phase 4 interfaces in [types/quiz.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/types/quiz.ts) and Zod schemas in [lib/validation.ts](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/lib/validation.ts).
+  - Implement owner queries `getOwnerQuizByToken`, `getQuizAttemptsForOwner`, `getQuizzesByOwnerTokens` in [lib/quiz.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/lib/quiz.ts).
+  - Add Phase 4 interfaces in [types/quiz.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/types/quiz.ts) and Zod schemas in [lib/validation.ts](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/lib/validation.ts).
 - [x] **TASK-404** `[P1]`: **Landing Page & "My Quizzes" Hub (`/`)**
-  - Implement [app/page.tsx](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/app/page.tsx) with hero, feature showcase, and returning user active quiz drawer.
+  - Implement [app/page.tsx](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/app/page.tsx) with hero, feature showcase, and returning user active quiz drawer.
 
 ---
 
@@ -188,32 +188,32 @@
 ---
 
 ### Phase 6: Viral Polish & Verification Checklist (P2 / P0)
- 
+
 - [x] **TASK-601** `[P2]`: **Social Sharing & Dynamic OpenGraph Metadata**
-   - Dynamic 1200x630 OG image generation route (`app/api/og/route.tsx`) using `ImageResponse` from `next/og`.
-   - Rich social preview metadata (`generateMetadata`, `openGraph`, `twitter`) for `/`, `/create`, `/q/[quizCode]`, `/q/[quizCode]/result/[attemptCode]`, and `/manage/[ownerToken]` (with `robots: noindex` protection).
+  - Dynamic 1200x630 OG image generation route (`app/api/og/route.tsx`) using `ImageResponse` from `next/og`.
+  - Rich social preview metadata (`generateMetadata`, `openGraph`, `twitter`) for `/`, `/create`, `/q/[quizCode]`, `/q/[quizCode]/result/[attemptCode]`, and `/manage/[ownerToken]` (with `robots: noindex` protection).
 - [x] **TASK-602** `[P2]`: **Loading Skeletons & Error Boundaries**
-   - Implemented high-quality, theme-consistent `loading.tsx` across all routes (`app/loading.tsx`, `app/create/loading.tsx`, `app/q/[quizCode]/loading.tsx`, `app/q/[quizCode]/result/[attemptCode]/loading.tsx`, `app/admin/reports/loading.tsx`, and `app/manage/[ownerToken]/loading.tsx`).
-   - Implemented `"use client"` error boundaries across all routes (`app/error.tsx`, `app/create/error.tsx`, `app/q/[quizCode]/error.tsx`, `app/q/[quizCode]/result/[attemptCode]/error.tsx`, `app/manage/[ownerToken]/error.tsx`, `app/admin/reports/error.tsx`).
-   - Implemented themed 404 page (`app/not-found.tsx`) with 56px touch CTA buttons and zero OS emojis.
+  - Implemented high-quality, theme-consistent `loading.tsx` across all routes (`app/loading.tsx`, `app/create/loading.tsx`, `app/q/[quizCode]/loading.tsx`, `app/q/[quizCode]/result/[attemptCode]/loading.tsx`, `app/admin/reports/loading.tsx`, and `app/manage/[ownerToken]/loading.tsx`).
+  - Implemented `"use client"` error boundaries across all routes (`app/error.tsx`, `app/create/error.tsx`, `app/q/[quizCode]/error.tsx`, `app/q/[quizCode]/result/[attemptCode]/error.tsx`, `app/manage/[ownerToken]/error.tsx`, `app/admin/reports/error.tsx`).
+  - Implemented themed 404 page (`app/not-found.tsx`) with 56px touch CTA buttons and zero OS emojis.
 - [x] **TASK-603** `[P0]`: **End-to-End Verification Run**
-   - Comprehensive automated test suite (`tests/e2e_loop.test.ts`) validating complete viral loop: Quiz Creation -> Cryptographic Token Hashing -> Public Sanitization (0 leakage) -> Anti-Cheat Honeypot & Timing -> Server Scoring -> Result Generation -> Owner Dashboard & Capability Toggle -> Admin Moderation.
-   - 100% test pass rate with zero answer key leakage and zero raw owner tokens saved to MongoDB.
-   - Clean production build verified via `npm run build` (11/11 static pages generated, dynamic routes compiled).
+  - Comprehensive automated test suite (`tests/e2e_loop.test.ts`) validating complete viral loop: Quiz Creation -> Cryptographic Token Hashing -> Public Sanitization (0 leakage) -> Anti-Cheat Honeypot & Timing -> Server Scoring -> Result Generation -> Owner Dashboard & Capability Toggle -> Admin Moderation.
+  - 100% test pass rate with zero answer key leakage and zero raw owner tokens saved to MongoDB.
+  - Clean production build verified via `npm run build` (11/11 static pages generated, dynamic routes compiled).
 
 ---
 
 ## 3. Version History & Changelog
 
-| Version  | Date         | Changes Summary                                                                                                                                                                                                                    |
-| :------- | :----------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Version  | Date         | Changes Summary                                                                                                                                                                                                                                                       |
+| :------- | :----------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `v1.2.0` | `2026-10-02` | Completed Phase 6: Dynamic OG metadata & /api/og generator (TASK-601), route loading skeletons & error boundaries (TASK-602), full end-to-end verification loop (TASK-603), and Cloudflare Workers DoH SRV resolution fix (ADR-010). All 30/30 tasks complete (100%). |
-| `v1.1.1` | `2026-10-02` | Completed Phase 3.5: Design System & Mobile UX Overhaul (TASK-351 through TASK-356). Implemented centralized tokens, ambient fixed backdrop, 3-stage QuizCreator wizard, 56px touch deck, trophy results card, and overhauled dashboard/landing. |
-| `v1.1.0` | `2026-10-02` | Added Phase 3.5: Design System & Mobile UX Overhaul (TASK-351 through TASK-356) based on agent/UI_Improvements.md; updated progress dashboard and active phase.                                                                   |
-| `v1.0.6` | `2026-10-02` | Completed Phase 5 frontend: `app/admin/reports/page.tsx` moderation dashboard, `QuizPlayer.tsx` elapsed time anti-bot fix, ADR-009 in `agent/decisions.md`.                                                                        |
-| `v1.0.5` | `2026-10-02` | Completed Phase 5 backend (TASK-501 through TASK-504): HTTP security headers in next.config.ts, lib/sanitize.ts, lib/security.ts, rate limiters, route refactoring, and authenticated admin moderation API (`/api/admin/reports`). |
-| `v1.0.4` | `2026-10-02` | Completed Phase 4 (TASK-401 through TASK-404): Pure TS QR code generator, ShareCard, QuizControls, Ranking leaderboard, ResultList friend breakdown, owner dashboard page, and landing page with MyQuizzes hub.                    |
-| `v1.0.3` | `2026-10-02` | Completed Phase 3 (TASK-301 through TASK-303): Starter templates, Quiz Creator, Quiz Player, and Celebratory Result Page.                                                                                                          |
-| `v1.0.2` | `2026-10-02` | Completed Phase 2 (TASK-201 through TASK-205): Rate limiting, quiz creation, public loader, scoring, and reports.                                                                                                                  |
-| `v1.0.1` | `2026-10-02` | Completed Phase 1 (TASK-101 through TASK-105): dependencies, models, singleton pool, validation, and token utilities.                                                                                                              |
-| `v1.0.0` | `2026-10-02` | Initial task tracker created from Implementation Plan.                                                                                                                                                                             |
+| `v1.1.1` | `2026-10-02` | Completed Phase 3.5: Design System & Mobile UX Overhaul (TASK-351 through TASK-356). Implemented centralized tokens, ambient fixed backdrop, 3-stage QuizCreator wizard, 56px touch deck, trophy results card, and overhauled dashboard/landing.                      |
+| `v1.1.0` | `2026-10-02` | Added Phase 3.5: Design System & Mobile UX Overhaul (TASK-351 through TASK-356) based on agent/UI_Improvements.md; updated progress dashboard and active phase.                                                                                                       |
+| `v1.0.6` | `2026-10-02` | Completed Phase 5 frontend: `app/admin/reports/page.tsx` moderation dashboard, `QuizPlayer.tsx` elapsed time anti-bot fix, ADR-009 in `agent/decisions.md`.                                                                                                           |
+| `v1.0.5` | `2026-10-02` | Completed Phase 5 backend (TASK-501 through TASK-504): HTTP security headers in next.config.ts, lib/sanitize.ts, lib/security.ts, rate limiters, route refactoring, and authenticated admin moderation API (`/api/admin/reports`).                                    |
+| `v1.0.4` | `2026-10-02` | Completed Phase 4 (TASK-401 through TASK-404): Pure TS QR code generator, ShareCard, QuizControls, Ranking leaderboard, ResultList friend breakdown, owner dashboard page, and landing page with MyQuizzes hub.                                                       |
+| `v1.0.3` | `2026-10-02` | Completed Phase 3 (TASK-301 through TASK-303): Starter templates, Quiz Creator, Quiz Player, and Celebratory Result Page.                                                                                                                                             |
+| `v1.0.2` | `2026-10-02` | Completed Phase 2 (TASK-201 through TASK-205): Rate limiting, quiz creation, public loader, scoring, and reports.                                                                                                                                                     |
+| `v1.0.1` | `2026-10-02` | Completed Phase 1 (TASK-101 through TASK-105): dependencies, models, singleton pool, validation, and token utilities.                                                                                                                                                 |
+| `v1.0.0` | `2026-10-02` | Initial task tracker created from Implementation Plan.                                                                                                                                                                                                                |

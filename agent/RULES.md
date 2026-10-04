@@ -151,12 +151,14 @@
 ## 6. Documentation & Architecture Graph Maintenance Invariant
 
 ### 6.1 Context Graph Change Logging (`agent/GRAPH_CONTEXT.md`)
-- **Rule**: Whenever any major or structurally significant change is made to any module, data schema, security boundary, or route topology, the AI agent **MUST** add a log entry to Section 7 of [agent/GRAPH_CONTEXT.md](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/agent/GRAPH_CONTEXT.md) and update the affected Mermaid diagram(s).
+
+- **Rule**: Whenever any major or structurally significant change is made to any module, data schema, security boundary, or route topology, the AI agent **MUST** add a log entry to Section 7 of [agent/GRAPH_CONTEXT.md](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/agent/GRAPH_CONTEXT.md) and update the affected Mermaid diagram(s).
 - **Threshold**: Do NOT log minor cosmetic or trivial bug fixes. Only log architectural modifications, new collections/fields, altered security policies, or major component workflow shifts.
 
 ### 6.2 Living Documentation Maintenance
+
 - **Rule**: The following documentation files in `/agent` must be actively maintained and kept synchronized with code changes:
-  1. [agent/task.md](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/agent/task.md): Update progress, check completed tasks, and bump version when milestones complete.
-  2. [agent/architecture.md](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/agent/architecture.md): Keep system patterns, tech stack, and pipelines accurate.
-  3. [agent/database.md](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/agent/database.md): Keep Mongoose schemas, indexes, and query projections accurate.
-  4. [agent/decisions.md](file:///home/kaif/storage/LemonRangers/lemon-quiz-meniac/agent/decisions.md): Record new Architectural Decision Records (ADRs) whenever major technical choices are made or modified.
+  1. [agent/task.md](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/agent/task.md): Update progress, check completed tasks, and bump version when milestones complete.
+  2. [agent/architecture.md](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/agent/architecture.md): Keep system patterns, tech stack, and pipelines accurate.
+  3. [agent/database.md](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/agent/database.md): Keep Mongoose schemas, indexes, and query projections accurate.
+  4. [agent/decisions.md](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/agent/decisions.md): Record new Architectural Decision Records (ADRs) whenever major technical choices are made or modified.
