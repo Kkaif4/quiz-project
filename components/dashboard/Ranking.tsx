@@ -23,7 +23,7 @@ export interface RankingProps {
 
 export function Ranking({ leaderboard, quizCode, shareUrl }: RankingProps) {
   const [copied, setCopied] = useState(false);
-  const effectiveShareUrl = shareUrl || `/q/${quizCode}`;
+  const effectiveShareUrl = shareUrl || `${process.env.NEXT_PUBLIC_APP_URL}/q/${quizCode}`;
 
   const handleCopy = async () => {
     try {

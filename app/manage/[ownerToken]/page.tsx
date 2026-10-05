@@ -228,7 +228,7 @@ export default async function ManagePage({ params }: ManagePageProps) {
         <Ranking
           leaderboard={leaderboard}
           quizCode={quiz.code}
-          shareUrl={`/q/${quiz.code}`}
+          shareUrl={`${process.env.NEXT_PUBLIC_APP_URL}/q/${quiz.code}`}
         />
 
         {/* Detailed Question Comparison Breakdown */}
