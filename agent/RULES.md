@@ -1,164 +1,748 @@
 # AI Rulebook: Engineering & Architectural Invariants
 
-> **Project**: Lemon Quiz (Friendship Quiz MVP)  
-> **Target Genre**: Viral, consumer-social web application for teens and young adults (ages 12–20).  
-> **Tech Stack**: Next.js App Router (Next 16 Canary + React 19), Tailwind CSS v4, MongoDB Atlas with Mongoose, Zod, Lucide React.  
-> **Purpose**: This rulebook defines the strict, non-negotiable architectural, security, design, and code quality invariants that ANY AI agent or engineer must adhere to when generating, refactoring, or reviewing code in this codebase.
+> **Project:** Lemon Quiz (Friendship Quiz MVP)
+>
+> **Target Genre:** Viral, consumer-social web application for teens and young adults (ages 12–20).
+>
+> **Tech Stack:** Next.js App Router (Next 16 Canary + React 19), Tailwind CSS v4, MongoDB Atlas with Mongoose, Zod, Lucide React.
+>
+> **Purpose:** This rulebook defines the strict, non-negotiable architectural, security, design, and code quality invariants for this codebase.
 
 ---
 
-## 1. Architectural Invariants
+# CRITICAL RULEBOOK INSTRUCTION
 
-### 1.1 Simplicity & Monolithic Architecture (The "No Over-Engineering" Rule)
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
 
-- **Rule**: Keep everything inside this single Next.js application repository.
-- **Forbidden**:
-  - ❌ Do NOT introduce Redis, Kafka, BullMQ, or background worker services for MVP.
-  - ❌ Do NOT create separate backend microservices or standalone Express/NestJS servers.
-  - ❌ Do NOT implement WebSockets. Polling or atomic server revalidation is sufficient.
-  - ❌ Do NOT integrate heavy third-party auth platforms (Clerk, NextAuth, Auth0, Supabase Auth) for the MVP. The product relies on anonymous cryptographic tokens.
+The rules in this document are mandatory.
 
-### 1.2 Embedded Data Model (Questions Belong to Quizzes)
+Any AI agent or engineer that works on this codebase MUST follow these rules.
 
-- **Rule**: Questions and options **MUST** be embedded directly within the `Quiz` document.
-- **Forbidden**:
-  - ❌ Do NOT create a separate `Question` or `Option` MongoDB collection.
-  - ❌ Do NOT perform `$lookup` or multi-collection joins to load a quiz. A quiz must load in a single fast indexed query.
+The agent MUST NOT:
 
-### 1.3 Next.js 16 & React 19 App Router Conventions
+- change a rule;
+- remove a rule;
+- weaken a rule;
+- reinterpret a rule;
+- add a new rule;
+- replace a rule with a different rule;
+- create an exception unless the rulebook already defines the exception.
 
-- **Rule**: Dynamic route parameters and search parameters are **Promises**.
-  - Correct: `const { quizCode } = await params;`
-  - Incorrect: `const { quizCode } = params;`
-- **Rule**: Preserve the separation between Server Components (default for data fetching and metadata) and Client Components (`"use client"` for forms, quiz interactivity, and confetti).
-- **Rule**: Always heed breaking changes documented in `node_modules/next/dist/docs/`.
+If a requested task conflicts with a rule, the agent MUST stop and report the conflict.
 
----
+The agent MUST NOT silently resolve the conflict.
 
-## 2. Security & Anti-Abuse Non-Negotiables
+The agent MUST ask for an explicit rulebook change before proceeding.
 
-### 2.1 Zero-Leakage Server-Side Scoring
-
-- **Rule**: The client must **NEVER** receive the answer key (`correctOptionId`).
-- **Implementation**:
-  - All public queries (`/q/[quizCode]`, `GET /api/quizzes/[quizCode]`) **MUST** explicitly project out `questions.correctOptionId` and `ownerTokenHash`.
-  - The client submits only `{ answers: [{ questionId, optionId }] }`.
-  - The server fetches the authoritative quiz document, computes `score` and `percentage` internally, and stores the `Attempt` record.
-
-### 2.2 Cryptographic Identity & Token Hashing
-
-- **Rule**: Raw owner tokens must **NEVER** be stored in MongoDB.
-  - Generate raw token: `crypto.randomBytes(32).toString('hex')` (64-character high-entropy string).
-  - Storage: Store only `ownerTokenHash = sha256(rawToken)`.
-  - Authentication: Incoming `/manage/[ownerToken]` requests hash the provided token and query by `ownerTokenHash`.
-  - Persistence: Store raw tokens in HTTP-only, `SameSite=Lax` cookies (`quiz_owner_tokens`) with client localStorage fallback.
-
-### 2.3 Strict Multi-Tier Rate Limiting
-
-- **Rule**: Every public write endpoint must be protected by an IP-based rate limiter:
-  - `POST /api/quizzes`: Max 5 requests / IP / hour.
-  - `POST /api/quizzes/[quizCode]/attempts`: Max 10 requests / IP / 10 minutes.
-  - `POST /api/reports`: Max 3 requests / IP / hour.
-- **Header Standard**: Return `429 Too Many Requests` with `Retry-After` header when limit is exceeded.
-
-### 2.4 Privacy & Data Minimization (Teen Protection)
-
-- **Rule**: Do **NOT** collect phone numbers, emails, addresses, school names, dates of birth, or sensitive profile details.
-- **Rule**: Never store raw IP addresses in database documents. Store a salted hash: `ipHash = sha256(clientIp + process.env.SALT)`.
-
-### 2.5 Anti-Bot & Anti-Cheat Guards
-
-- **Honeypot**: Include a hidden form field (e.g. `website`) on attempt and quiz forms. If populated, silently reject or fail the request.
-- **Timing Check**: Reject attempts submitted in under 3 seconds (physically impossible for human reading and answering).
-- **Payload Size**: Limit JSON body sizes to 50KB maximum to eliminate memory exhaustion attacks.
+The rulebook is the source of truth for the invariants defined below.
 
 ---
 
-## 3. Data Validation & Boundary Constraints
+# 1. Architectural Invariants
 
-### 3.1 Dual-Layer Validation (Zod + Mongoose)
+## 1.1 Simplicity & Monolithic Architecture
 
-- **Rule**: Validate incoming payloads with **Zod** at the route boundary before any database interaction. Ensure Mongoose schemas enforce the identical constraints as a secondary guarantee.
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
 
-### 3.2 Fixed Numeric Bounds
+### Rule
 
-| Field              | Minimum | Maximum   | Invariant Rationale                 |
-| :----------------- | :------ | :-------- | :---------------------------------- |
-| Quiz Title         | 1 char  | 100 chars | Prevents UI overflow, trimmed       |
+Keep the complete application inside this single Next.js repository.
+
+### Forbidden
+
+The agent MUST NOT:
+
+- introduce Redis for the MVP;
+- introduce Kafka for the MVP;
+- introduce BullMQ for the MVP;
+- introduce background worker services for the MVP;
+- create separate backend microservices;
+- create a standalone Express server;
+- create a standalone NestJS server;
+- implement WebSockets;
+- introduce heavy third-party authentication platforms such as Clerk, NextAuth, Auth0, or Supabase Auth for the MVP.
+
+Polling or atomic server revalidation is sufficient.
+
+The product uses anonymous cryptographic tokens.
+
+---
+
+## 1.2 Embedded Data Model
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+### Rule
+
+Store questions and options directly inside the `Quiz` MongoDB document.
+
+### Forbidden
+
+The agent MUST NOT:
+
+- create a separate `Question` collection;
+- create a separate `Option` collection;
+- use `$lookup` to load a quiz;
+- use multi-collection joins to load a quiz.
+
+A quiz MUST load with one fast indexed query.
+
+---
+
+## 1.3 Next.js 16 & React 19 App Router
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+### Rule
+
+Dynamic route parameters and search parameters are Promises.
+
+### Correct
+
+```ts
+const { quizCode } = await params;
+```
+
+### Incorrect
+
+```ts
+const { quizCode } = params;
+```
+
+### Rule
+
+Preserve the separation between Server Components and Client Components.
+
+Use Server Components by default for:
+
+- data fetching;
+- metadata;
+- server-rendered content.
+
+Use Client Components when required for:
+
+- forms;
+- quiz interactivity;
+- confetti;
+- other browser-only interaction.
+
+### Rule
+
+Always follow breaking changes documented in:
+
+```text
+node_modules/next/dist/docs/
+```
+
+---
+
+# 2. Security & Anti-Abuse Non-Negotiables
+
+## 2.1 Zero-Leakage Server-Side Scoring
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+### Rule
+
+The client MUST NEVER receive the answer key.
+
+The answer key includes:
+
+```text
+correctOptionId
+```
+
+### Required behavior
+
+Public quiz responses MUST explicitly exclude:
+
+```text
+questions.correctOptionId
+ownerTokenHash
+```
+
+This applies to:
+
+```text
+/q/[quizCode]
+GET /api/quizzes/[quizCode]
+```
+
+The client MUST submit only:
+
+```json
+{
+  "answers": [
+    {
+      "questionId": "...",
+      "optionId": "..."
+    }
+  ]
+}
+```
+
+The server MUST:
+
+1. fetch the authoritative quiz document;
+2. calculate the score on the server;
+3. calculate the percentage on the server;
+4. store the `Attempt` record.
+
+The client MUST NOT calculate or control the authoritative score.
+
+---
+
+## 2.2 Cryptographic Identity & Token Hashing
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+### Rule
+
+Raw owner tokens MUST NEVER be stored in MongoDB.
+
+### Token generation
+
+Generate the raw token with:
+
+```ts
+crypto.randomBytes(32).toString("hex");
+```
+
+This produces a 64-character high-entropy string.
+
+### Storage
+
+Store only:
+
+```text
+ownerTokenHash = sha256(rawToken)
+```
+
+### Authentication
+
+For incoming:
+
+```text
+/manage/[ownerToken]
+```
+
+requests:
+
+1. receive the provided token;
+2. hash the token;
+3. query MongoDB using `ownerTokenHash`.
+
+### Persistence
+
+Store raw owner tokens in:
+
+```text
+HTTP-only
+SameSite=Lax
+```
+
+cookies named:
+
+```text
+quiz_owner_tokens
+```
+
+Use client `localStorage` as the fallback.
+
+---
+
+## 2.3 Strict Multi-Tier Rate Limiting
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+### Rule
+
+Every public write endpoint MUST use IP-based rate limiting.
+
+### Limits
+
+| Endpoint                                | Limit                         |
+| --------------------------------------- | ----------------------------- |
+| `POST /api/quizzes`                     | 5 requests / IP / hour        |
+| `POST /api/quizzes/[quizCode]/attempts` | 10 requests / IP / 10 minutes |
+| `POST /api/reports`                     | 3 requests / IP / hour        |
+
+### Response
+
+When a limit is exceeded, return:
+
+```text
+429 Too Many Requests
+```
+
+The response MUST include:
+
+```text
+Retry-After
+```
+
+---
+
+## 2.4 Privacy & Data Minimization
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+### Rule
+
+Do NOT collect:
+
+- phone numbers;
+- email addresses;
+- physical addresses;
+- school names;
+- dates of birth;
+- sensitive profile details.
+
+### Rule
+
+Never store raw IP addresses in MongoDB documents.
+
+Store:
+
+```text
+ipHash = sha256(clientIp + process.env.SALT)
+```
+
+---
+
+## 2.5 Anti-Bot & Anti-Cheat Guards
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+### Honeypot
+
+Attempt and quiz forms MUST include a hidden field.
+
+Example:
+
+```text
+website
+```
+
+If the field contains a value, silently reject or fail the request.
+
+### Timing check
+
+Reject attempts submitted in less than:
+
+```text
+3 seconds
+```
+
+### Payload size
+
+Limit JSON request bodies to:
+
+```text
+50KB maximum
+```
+
+---
+
+# 3. Data Validation & Boundary Constraints
+
+## 3.1 Dual-Layer Validation
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+### Rule
+
+Validate every incoming payload with Zod at the route boundary.
+
+Perform Zod validation before any database interaction.
+
+Mongoose schemas MUST enforce the same constraints as a second validation layer.
+
+---
+
+## 3.2 Fixed Numeric Bounds
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+The following limits are fixed.
+
+| Field              | Minimum |   Maximum | Invariant Rationale                 |
+| ------------------ | ------: | --------: | ----------------------------------- |
+| Quiz Title         |  1 char | 100 chars | Prevents UI overflow, trimmed       |
 | Quiz Description   | 0 chars | 300 chars | Optional context                    |
-| Questions Count    | 3       | 15        | Keeps quiz engaging without fatigue |
-| Question Text      | 1 char  | 300 chars | High legibility on mobile           |
-| Options Count      | 2       | 6         | Standard multiple choice limits     |
-| Option Text        | 1 char  | 100 chars | Clean button typography             |
-| Nickname           | 1 char  | 30 chars  | Displayable in leaderboard          |
+| Questions Count    |       3 |        15 | Keeps quiz engaging without fatigue |
+| Question Text      |  1 char | 300 chars | High legibility on mobile           |
+| Options Count      |       2 |         6 | Standard multiple choice limits     |
+| Option Text        |  1 char | 100 chars | Clean button typography             |
+| Nickname           |  1 char |  30 chars | Displayable in leaderboard          |
 | Report Description | 0 chars | 500 chars | Sufficient for moderation details   |
 
-### 3.3 Relational Invariants
-
-- Each `correctOptionId` in a question **MUST** match the `id` of an option present in that question's `options` array.
-- In `Attempt.answers`, every `optionId` must exist within the respective `questionId` in the quiz.
+The agent MUST NOT change these bounds without an explicit rulebook change.
 
 ---
 
-## 4. UI/UX & Design Rules (Premium Youth Standard)
+## 3.3 Relational Invariants
 
-### 4.1 Zero OS Emoji Clutter
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
 
-- **Rule**: **NEVER** use raw system emojis (`🎉`, `🔥`, `🍕`, `💀`, `❤️`) in UI buttons, titles, headers, badges, or dashboard metrics.
-- **Standard**: Always use **Lucide React** vector icons (`<Sparkles />`, `<Crown />`, `<HeartHandshake />`, `<Flame />`, `<ShieldAlert />`, `<Share2 />`) styled inside duotone container pills.
-- **Reason**: OS emojis render inconsistently across Apple, Google, and Microsoft platforms, disrupt visual rhythm, and look amateurish.
+Every `correctOptionId` MUST match the `id` of an option in that question's `options` array.
 
-### 4.2 Mobile-First & Thumb-Friendly
-
-- **Rule**: 95%+ of users open quizzes on mobile through WhatsApp, Instagram, or TikTok.
-- **Standard**:
-  - Interactive options must have a minimum tap height of **56px**.
-  - Primary CTAs must be sticky or immediately visible above the fold on mobile viewports.
-  - Active button states must provide tactile feedback: `active:scale-[0.98] transition-transform duration-100`.
-
-### 4.3 The Viral Conversion Priority
-
-- **Rule**: The Result Page (`/q/[quizCode]/result/[attemptCode]`) has one primary metric: **converting the friend into a new quiz creator**.
-- **Standard**: The primary, most radiant, high-contrast button on the result screen must always be **"Create Your Own Quiz"**. Sharing the score is always secondary.
+In `Attempt.answers`, every `optionId` MUST exist inside the corresponding `questionId` in the quiz.
 
 ---
 
-## 5. Code Quality & Implementation Rules
+# 4. UI/UX & Design Rules
 
-### 5.1 Strict TypeScript & Zero `any`
+## 4.1 Zero OS Emoji Clutter
 
-- **Rule**: No implicit or explicit `any` types.
-- **Rule**: All database models, API request payloads, and API responses must have strict TypeScript interfaces defined in `types/`.
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
 
-### 5.2 Serverless MongoDB Connection Pooling
+### Rule
 
-- **Rule**: Never call `mongoose.connect()` directly inside route handlers without cached connection handling.
-- **Standard**: Use the singleton pattern in `lib/db.ts` to cache connections across hot serverless lambdas.
+NEVER use raw system emojis in:
 
-### 5.3 Safe String Sanitization & XSS Defense
+- UI buttons;
+- titles;
+- headers;
+- badges;
+- dashboard metrics.
 
-- **Rule**: Never use `dangerouslySetInnerHTML`.
-- **Rule**: All user-provided strings (quiz title, question text, nickname) must be sanitized and HTML-escaped before display.
+Examples of forbidden raw emojis include:
 
-### 5.4 Error Handling & User-Facing Copy
+```text
+🎉
+🔥
+🍕
+💀
+❤️
+```
 
-- **Rule**: Never expose raw database errors, stack traces, or internal server errors to client responses.
-- **Standard**: Return standardized JSON: `{ success: false, error: string }` with appropriate HTTP status codes (`400`, `401`, `404`, `429`, `500`).
-- **Tone**: Error messages must be friendly, clear, and reassuring—never technical jargon.
+### Standard
+
+Use Lucide React vector icons instead.
+
+Examples:
+
+```tsx
+<Sparkles />
+<Crown />
+<HeartHandshake />
+<Flame />
+<ShieldAlert />
+<Share2 />
+```
+
+Style these icons inside duotone container pills.
+
+### Reason
+
+OS emojis render differently across Apple, Google, and Microsoft platforms.
+
+This creates inconsistent visual rhythm and can make the interface look amateurish.
 
 ---
 
-## 6. Documentation & Architecture Graph Maintenance Invariant
+## 4.2 Mobile-First & Thumb-Friendly
 
-### 6.1 Context Graph Change Logging (`agent/GRAPH_CONTEXT.md`)
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
 
-- **Rule**: Whenever any major or structurally significant change is made to any module, data schema, security boundary, or route topology, the AI agent **MUST** add a log entry to Section 7 of [agent/GRAPH_CONTEXT.md](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/agent/GRAPH_CONTEXT.md) and update the affected Mermaid diagram(s).
-- **Threshold**: Do NOT log minor cosmetic or trivial bug fixes. Only log architectural modifications, new collections/fields, altered security policies, or major component workflow shifts.
+### Rule
 
-### 6.2 Living Documentation Maintenance
+Design for mobile first.
 
-- **Rule**: The following documentation files in `/agent` must be actively maintained and kept synchronized with code changes:
-  1. [agent/task.md](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/agent/task.md): Update progress, check completed tasks, and bump version when milestones complete.
-  2. [agent/architecture.md](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/agent/architecture.md): Keep system patterns, tech stack, and pipelines accurate.
-  3. [agent/database.md](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/agent/database.md): Keep Mongoose schemas, indexes, and query projections accurate.
-  4. [agent/decisions.md](file:///home/kaif/storage/Codes/Fun-projects/lemon-quiz-maniac/agent/decisions.md): Record new Architectural Decision Records (ADRs) whenever major technical choices are made or modified.
+The target assumption is that 95%+ of users open quizzes on mobile through:
+
+- WhatsApp;
+- Instagram;
+- TikTok.
+
+### Interactive options
+
+Interactive options MUST have a minimum tap height of:
+
+```text
+56px
+```
+
+### Primary CTAs
+
+Primary CTAs MUST be:
+
+- sticky; or
+- immediately visible above the fold
+
+on mobile viewports.
+
+### Active states
+
+Interactive buttons MUST provide tactile feedback.
+
+Use:
+
+```text
+active:scale-[0.98]
+transition-transform
+duration-100
+```
+
+---
+
+## 4.3 Viral Conversion Priority
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+### Rule
+
+The result page:
+
+```text
+/q/[quizCode]/result/[attemptCode]
+```
+
+has one primary metric:
+
+**Convert the friend into a new quiz creator.**
+
+### Standard
+
+The primary high-contrast and most visually prominent button on the result screen MUST be:
+
+```text
+Create Your Own Quiz
+```
+
+Sharing the score MUST remain secondary.
+
+---
+
+# 5. Code Quality & Implementation Rules
+
+## 5.1 Strict TypeScript & Zero `any`
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+### Rule
+
+No implicit `any` types.
+
+No explicit `any` types.
+
+### Rule
+
+The following MUST have strict TypeScript interfaces in `types/`:
+
+- database models;
+- API request payloads;
+- API responses.
+
+---
+
+## 5.2 Serverless MongoDB Connection Pooling
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+### Rule
+
+Never call:
+
+```ts
+mongoose.connect();
+```
+
+directly inside route handlers without cached connection handling.
+
+### Standard
+
+Use the singleton pattern in:
+
+```text
+lib/db.ts
+```
+
+The singleton MUST cache MongoDB connections across hot serverless lambdas.
+
+---
+
+## 5.3 Safe String Sanitization & XSS Defense
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+### Rule
+
+Never use:
+
+```tsx
+dangerouslySetInnerHTML;
+```
+
+### Rule
+
+Sanitize and HTML-escape all user-provided strings before display.
+
+This includes:
+
+- quiz titles;
+- question text;
+- nicknames.
+
+---
+
+## 5.4 Error Handling & User-Facing Copy
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+### Rule
+
+Never expose:
+
+- raw database errors;
+- stack traces;
+- internal server errors
+
+to clients.
+
+### Standard response
+
+Return:
+
+```json
+{
+  "success": false,
+  "error": "..."
+}
+```
+
+Use the appropriate HTTP status code:
+
+```text
+400
+401
+404
+429
+500
+```
+
+### User-facing tone
+
+Error messages MUST be:
+
+- friendly;
+- clear;
+- reassuring.
+
+Error messages MUST NOT use unnecessary technical jargon.
+
+---
+
+# 6. Documentation & Architecture Graph Maintenance Invariant
+
+## 6.1 Context Graph Change Logging
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+Maintain:
+
+```text
+agent/GRAPH_CONTEXT.md
+```
+
+### Rule
+
+Whenever a major or structurally significant change is made to any of the following:
+
+- module;
+- data schema;
+- security boundary;
+- route topology;
+
+the AI agent MUST:
+
+1. add a log entry to Section 7 of `agent/GRAPH_CONTEXT.md`;
+2. update the affected Mermaid diagrams.
+
+### Do not log
+
+Do NOT log:
+
+- minor cosmetic changes;
+- trivial bug fixes.
+
+### Log
+
+Log:
+
+- architectural modifications;
+- new collections;
+- new fields;
+- changed security policies;
+- major component workflow changes.
+
+---
+
+## 6.2 Living Documentation Maintenance
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+The following documentation files in `/agent` MUST remain synchronized with the codebase.
+
+### 1. `agent/task.md`
+
+Update:
+
+- task progress;
+- completed tasks.
+
+Bump the version when milestones are completed.
+
+### 2. `agent/architecture.md`
+
+Keep the following accurate:
+
+- system patterns;
+- technology stack;
+- pipelines.
+
+### 3. `agent/database.md`
+
+Keep the following accurate:
+
+- Mongoose schemas;
+- indexes;
+- query projections.
+
+### 4. `agent/decisions.md`
+
+Record a new Architectural Decision Record when a major technical choice is made or modified.
+
+---
+
+# RULEBOOK ENFORCEMENT
+
+**[IMMUTABLE — DO NOT CHANGE OR ADD]**
+
+Before implementing any task, the AI agent MUST check the task against this rulebook.
+
+The agent MUST NOT modify an invariant to make a task easier.
+
+The agent MUST NOT add a new architecture pattern when an existing rule already defines the required behavior.
+
+The agent MUST NOT silently create exceptions.
+
+If a task conflicts with this rulebook:
+
+1. stop implementation;
+2. identify the conflicting rule;
+3. explain the conflict;
+4. ask for explicit authorization to modify the rulebook.
+
+Until the rulebook is explicitly changed, the existing rule remains active.
+
+**The agent must obey the rulebook.**
+
+**The agent must not rewrite the rulebook.**
+
+**The agent must not add rules to the rulebook.**
+
+**The agent must not remove rules from the rulebook.**
+
+**The agent must not weaken rules in the rulebook.**
