@@ -22,6 +22,7 @@ import {
 import type { IQuizPublic } from "@/types/quiz";
 import { cn } from "@/lib/utils";
 import { getBrowserFingerprint } from "@/lib/fingerprint";
+import { useRecaptchaV3 } from "@/hooks/useRecaptchaV3";
 
 interface QuizPlayerProps {
   quiz: IQuizPublic;
@@ -46,6 +47,7 @@ export function QuizPlayer({
   isPreview = false,
 }: QuizPlayerProps) {
   const router = useRouter();
+  const { executeRecaptcha } = useRecaptchaV3();
 
   // Owner recognition state
   const [ownerToken, setOwnerToken] = useState<string | null>(
@@ -197,6 +199,8 @@ export function QuizPlayer({
       );
 
       try {
+        const recaptchaToken = await executeRecaptcha("submit_attempt");
+
         const response = await fetch(`/api/quizzes/${quiz.code}/attempts`, {
           method: "POST",
           headers: {
@@ -207,6 +211,7 @@ export function QuizPlayer({
             answers: finalAnswers,
             durationSeconds: elapsedSeconds,
             website: honeypot,
+            recaptchaToken: recaptchaToken || undefined,
           }),
         });
 
@@ -240,7 +245,7 @@ export function QuizPlayer({
         setStage("error");
       }
     },
-    [honeypot, nickname, quiz.code, router],
+    [executeRecaptcha, honeypot, nickname, quiz.code, router],
   );
 
   // Handle Option selection with 250ms tactile feedback auto-advance
@@ -273,6 +278,8 @@ export function QuizPlayer({
     setReportError(null);
 
     try {
+      const recaptchaToken = await executeRecaptcha("submit_report");
+
       const res = await fetch("/api/reports", {
         method: "POST",
         headers: {
@@ -283,6 +290,7 @@ export function QuizPlayer({
           reason: reportReason,
           description: reportDescription.trim(),
           website: reportHoneypot,
+          recaptchaToken: recaptchaToken || undefined,
         }),
       });
 
@@ -609,8 +617,32 @@ export function QuizPlayer({
       </div>
 
       {/* Discreet Footer with Report Option */}
-      <footer className="mt-8 mb-4 pt-4 border-t border-[var(--border-subtle)] flex items-center justify-between text-xs text-[var(--text-muted)]">
-        <span>LemonQuiz · Anonymous &amp; Safe</span>
+      <footer className="mt-8 mb-4 pt-4 border-t border-[var(--border-subtle)] flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-center sm:text-left">
+          <span>LemonQuiz · Anonymous &amp; Safe</span>
+          <span className="hidden sm:inline">·</span>
+          <span className="text-[10px] text-[var(--text-muted)]">
+            Protected by reCAPTCHA (
+            <a
+              href="https://policies.google.com/privacy"
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:text-[var(--text-primary)]"
+            >
+              Privacy
+            </a>
+            {" · "}
+            <a
+              href="https://policies.google.com/terms"
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:text-[var(--text-primary)]"
+            >
+              Terms
+            </a>
+            )
+          </span>
+        </div>
         <button
           type="button"
           onClick={() => setIsReportOpen(true)}
@@ -721,6 +753,28 @@ export function QuizPlayer({
                     className="w-full px-3 py-2 text-xs font-medium rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] focus:border-violet-500 focus:ring-2 focus:ring-violet-500/25 text-[var(--text-primary)] outline-none resize-none"
                   />
                 </div>
+
+                <p className="text-[10px] text-[var(--text-muted)] text-center">
+                  Protected by reCAPTCHA (
+                  <a
+                    href="https://policies.google.com/privacy"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline hover:text-[var(--text-primary)]"
+                  >
+                    Privacy
+                  </a>
+                  {" · "}
+                  <a
+                    href="https://policies.google.com/terms"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline hover:text-[var(--text-primary)]"
+                  >
+                    Terms
+                  </a>
+                  )
+                </p>
 
                 <div className="flex gap-2.5 pt-2">
                   <button

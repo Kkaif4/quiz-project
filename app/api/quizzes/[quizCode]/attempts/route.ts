@@ -10,6 +10,7 @@ import {
   createRateLimitHeaders,
 } from "@/lib/rate-limit";
 import { validatePayloadSize, isHoneypotTriggered } from "@/lib/security";
+import { verifyRecaptchaV3 } from "@/lib/recaptcha";
 import { sanitizeText } from "@/lib/sanitize";
 import type { AttemptSubmissionResult } from "@/types/quiz";
 
@@ -77,6 +78,19 @@ export async function POST(
   }
 
   const validatedData = validation.data;
+
+  // 4.5 reCAPTCHA v3 verification
+  const recaptchaResult = await verifyRecaptchaV3(
+    validatedData.recaptchaToken,
+    "submit_attempt",
+    clientIp,
+  );
+  if (!recaptchaResult.success) {
+    return NextResponse.json(
+      { success: false, error: recaptchaResult.error || "Security verification failed" },
+      { status: 403, headers: rateLimitHeaders },
+    );
+  }
 
   try {
     await connectToDatabase();

@@ -24,6 +24,7 @@ import { QuestionEditor, type QuestionEditorData } from "./QuestionEditor";
 import { cn } from "@/lib/utils";
 import type { QuizCreationResult } from "@/types/quiz";
 import { getBrowserFingerprint } from "@/lib/fingerprint";
+import { useRecaptchaV3 } from "@/hooks/useRecaptchaV3";
 
 interface QuizCreatorProps {
   initialTemplateId?: string;
@@ -34,6 +35,7 @@ type WizardStage = "setup" | "wizard" | "review";
 export function QuizCreator({ initialTemplateId }: QuizCreatorProps) {
   const router = useRouter();
   const [, startTransition] = useTransition();
+  const { executeRecaptcha } = useRecaptchaV3();
 
   // Load initial template or default to "best-friends"
   const defaultTemplate =
@@ -313,6 +315,9 @@ export function QuizCreator({ initialTemplateId }: QuizCreatorProps) {
     setIsSubmitting(true);
 
     try {
+      // Invisible reCAPTCHA v3 verification (fails open safely if blocked or times out)
+      const recaptchaToken = await executeRecaptcha("create_quiz");
+
       const payload = {
         creatorName: creatorName.trim(),
         clientFingerprint: clientFingerprint || undefined,
@@ -334,6 +339,7 @@ export function QuizCreator({ initialTemplateId }: QuizCreatorProps) {
           maxAttemptsPerPerson: 1,
         },
         website: honeypot, // Honeypot anti-bot
+        recaptchaToken: recaptchaToken || undefined,
       };
 
       const response = await fetch("/api/quizzes", {
@@ -971,6 +977,29 @@ export function QuizCreator({ initialTemplateId }: QuizCreatorProps) {
               );
             })}
           </div>
+
+          {/* Google reCAPTCHA v3 Disclosure */}
+          <p className="text-[10px] text-[var(--text-muted)] text-center mt-3 mb-2">
+            Protected by reCAPTCHA (
+            <a
+              href="https://policies.google.com/privacy"
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:text-[var(--text-secondary)]"
+            >
+              Privacy
+            </a>
+            {" "}&middot;{" "}
+            <a
+              href="https://policies.google.com/terms"
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:text-[var(--text-secondary)]"
+            >
+              Terms
+            </a>
+            )
+          </p>
 
           {/* Sticky Mobile Review Action Dock */}
           <div className="fixed bottom-0 left-0 right-0 z-40 bg-[var(--card-bg)]/95 backdrop-blur-md border-t border-[var(--card-border)] p-3 sm:p-4 shadow-[0_-8px_30px_rgb(0,0,0,0.25)]">

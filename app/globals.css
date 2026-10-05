@@ -184,3 +184,9 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Google reCAPTCHA v3 Floating Badge Tuning */
+.grecaptcha-badge {
+  z-index: 40 !important;
+  margin-bottom: 8px;
+}
