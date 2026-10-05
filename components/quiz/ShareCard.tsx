@@ -46,9 +46,20 @@ export function ShareCard({ quizCode, quizTitle, ownerToken }: ShareCardProps) {
   }, [origin, ownerToken]);
 
   const whatsappUrl = useMemo(() => {
-    const text = `Hey! I made a friendship quiz: "${quizTitle}". How well do you really know me? Take the test and see your ranking on my leaderboard: ${publicUrl}`;
+    const text = `*Think you actually know me?*
+
+    I just made a friendship quiz about me — let’s see how well you *Really Know Me*
+
+    _Take the quiz_
+    _Get your score_
+    _See where you rank on my leaderboard_
+
+    Think you can beat everyone?
+
+    ${publicUrl}`;
+
     return `https://wa.me/?text=${encodeURIComponent(text)}`;
-  }, [quizTitle, publicUrl]);
+  }, [publicUrl]);
 
   const qrData = useMemo(() => {
     if (!publicUrl) return null;
@@ -199,7 +210,8 @@ export function ShareCard({ quizCode, quizTitle, ownerToken }: ShareCardProps) {
                   Private Owner Dashboard Link
                 </h4>
                 <p className="text-xs font-medium text-[var(--text-secondary)] mt-0.5 leading-relaxed">
-                  This page contains host controls and reveals detailed answers submitted by each friend.
+                  This page contains host controls and reveals detailed answers
+                  submitted by each friend.
                   <strong className="text-violet-200 font-bold ml-1">
                     Bookmark this secret link!
                   </strong>
