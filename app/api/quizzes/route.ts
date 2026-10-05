@@ -16,6 +16,7 @@ import {
   createRateLimitHeaders,
 } from "@/lib/rate-limit";
 import { validatePayloadSize, isHoneypotTriggered } from "@/lib/security";
+import { verifyRecaptchaV3 } from "@/lib/recaptcha";
 import { sanitizeText } from "@/lib/sanitize";
 import type { QuizCreationResult } from "@/types/quiz";
 
@@ -80,6 +81,20 @@ export async function POST(request: Request) {
 
   const validatedData = validation.data;
   console.log(`[QuizCreate:${reqId}] Validation passed. Title: "${validatedData.title}", Questions: ${validatedData.questions.length}`);
+
+  // 4.5 reCAPTCHA v3 verification
+  const recaptchaResult = await verifyRecaptchaV3(
+    validatedData.recaptchaToken,
+    "create_quiz",
+    clientIp,
+  );
+  if (!recaptchaResult.success) {
+    console.warn(`[QuizCreate:${reqId}] reCAPTCHA verification rejected:`, recaptchaResult.error);
+    return NextResponse.json(
+      { success: false, error: recaptchaResult.error || "Security verification failed" },
+      { status: 403, headers: rateLimitHeaders },
+    );
+  }
 
   // 5. Connect to database
   try {

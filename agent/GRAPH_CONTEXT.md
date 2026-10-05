@@ -187,7 +187,10 @@ flowchart LR
     ZodValidator -->|Valid| HoneypotCheck
     
     HoneypotCheck -->|Bot Detected| SilentDrop["400 / Silent Reject"]
-    HoneypotCheck -->|Human| Sanitizer
+    HoneypotCheck -->|Human| RecaptchaVerify{"reCAPTCHA v3"}
+    
+    RecaptchaVerify -->|Score < 0.5| Error403["403 Forbidden"]
+    RecaptchaVerify -->|Score >= 0.5 / Bypass| Sanitizer
     
     Sanitizer --> LogicRouter{"Route Type"}
     LogicRouter -->|Create Quiz| TokenHasher --> MongoosePool
@@ -315,11 +318,4 @@ graph TD
 | `REV-011` | `2026-10-05` | Phase 8: Browser Blueprint Identity & Creator Name (ADR-012) | Implemented zero-dependency native Web Crypto SHA-256 client fingerprinting (`lib/fingerprint.ts`). Activated User Mongoose model with `name`, `clientFingerprint`, and salted `ipHash`. Refactored `QuizCreator.tsx` Stage 1 to require Creator Name first with dynamic title auto-customization. Created `POST /api/users/identify` for returning user recognition and quiz recovery. Updated `POST /api/quizzes` to link `Quiz.ownerId = user._id`. Enhanced `MyQuizzesSection.tsx` to greet returning creators and recover active quizzes even across cookie purges. Verified via `tests/e2e_loop.test.ts` with 100% pass rate. | Full-Stack Architect |
 | `REV-012` | `2026-10-05` | Phase 9: SEO & Search Indexing Architecture (ADR-013) | Implemented comprehensive Google search indexing: dynamic XML sitemap with 1h edge ISR (`app/sitemap.ts`) backed by compound index `{ status: 1, updatedAt: -1 }` on `QuizSchema`, search crawler directives (`app/robots.ts`), Web App Manifest (`app/manifest.ts`), dynamic origin resolver (`lib/seo.ts`), XSS-safe type-safe JSON-LD Server Component (`components/seo/JsonLd.tsx`), Schema.org schemas (`WebSite`, `WebApplication`, `FAQPage`, `BreadcrumbList`, and zero-answer-key-leakage `Quiz` schema), accessible `<details>/<summary>` FAQ accordion (`components/home/FaqSection.tsx`), semantic heading corrections (`h1`/`h2`/`h3`), explicit canonical tags (`/`, `/create`, `/q/[quizCode]`), canonical link equity consolidation on result pages (`/q/[quizCode]/result/[attemptCode]` -> `/q/[quizCode]` with `noindex, follow`), and defense-in-depth search cloaking (`app/admin/layout.tsx`, `app/manage/[ownerToken]/layout.tsx`, and `X-Robots-Tag` headers in `next.config.ts`). Verified via `tests/seo.test.ts` and `npm run build`. | Primary Orchestrator |
 | `REV-013` | `2026-10-05` | Phase 10: Owner Recognition, Routing & Play Screen Protection (ADR-014) | Resolved missing owner dashboard and forced-play issues: added `ownerTokens` array to `UserSchema`, persisted owner token on quiz creation, and hydrated `ownerToken` during blueprint identify (`POST /api/users/identify`) so homepage cards display `Manage / Leaderboard`. Added server-side auto-redirection on `/q/[quizCode]` to `/manage/[matchedToken]` when cookie matches, with optional `?preview=true` banner. Created `POST /api/quizzes/[quizCode]/owner-check` and client-side owner shield in `QuizPlayer.tsx` displaying the Owner Welcome Screen instead of forcing creators through nickname or quiz questions. Ensured bulletproof navigation on quiz creation with celebratory overlay and `window.location.assign`. Added lowercase `public/ads.txt` and automated test suite `tests/owner_flow.test.ts` with 100% pass rate. | Full-Stack Architect |
-
-
-
-
-
-
-
-
+| `REV-014` | `2026-10-05` | Phase 11: Invisible Google reCAPTCHA v3 Bot Defense (ADR-015) | Implemented zero-friction Google reCAPTCHA v3 invisible bot defense across write routes (`POST /api/quizzes`, `POST /api/quizzes/[quizCode]/attempts`, `POST /api/reports`). Created server verification engine `lib/recaptcha.ts` with score evaluation, action matching, and fail-open timeout resilience. Updated Zod schemas (`lib/validation.ts`) and types (`types/quiz.ts`). Built client engine `lib/recaptcha-client.ts` and `hooks/useRecaptchaV3.ts` with 4000ms safety timeout race condition. Integrated invisible execution into `QuizCreator.tsx` and `QuizPlayer.tsx`, added terms/privacy disclosures, and styled `.grecaptcha-badge`. Maintained zero-friction creator recognition by excluding `/api/users/identify`. Verified via `tests/recaptcha.test.ts` (9/9 pass) and successful production build. | Security & Full-Stack Architect |

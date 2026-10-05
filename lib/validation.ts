@@ -112,6 +112,7 @@ export const CreateQuizSchema = z.object({
     maxAttemptsPerPerson: 1,
   }),
   website: z.string().max(0, "Bot detected").optional().nullable(),
+  recaptchaToken: z.string().optional().nullable(),
 });
 
 export const AttemptAnswerInputSchema = z.object({
@@ -148,6 +149,7 @@ export const SubmitAttemptSchema = z.object({
     .number()
     .min(3, "Attempt completed impossibly fast"),
   website: z.string().max(0, "Bot detected").optional().nullable(),
+  recaptchaToken: z.string().optional().nullable(),
 });
 
 export const ReportReasonEnum = z.enum([
@@ -172,6 +174,7 @@ export const CreateReportSchema = z.object({
     .default("")
     .optional(),
   website: z.string().max(0, "Bot detected").optional().nullable(),
+  recaptchaToken: z.string().optional().nullable(),
 });
 
 export type CreateQuizInputSchemaType = z.infer<typeof CreateQuizSchema>;

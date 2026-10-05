@@ -213,6 +213,23 @@
   - *Positive*: Creators are never forced to take their own quiz; their dashboard and live leaderboard are instantly accessible; returning users can manage all their quizzes even after cookie purges; zero answer key leakage is strictly preserved.
   - *Negative*: Owners wanting to take their own quiz as an anonymous player must explicitly choose "Preview Mode" (`?preview=true`).
 
+---
 
+### ADR-015: Invisible Google reCAPTCHA v3 Bot Defense & Security Architecture
 
-
+- **Status**: Accepted
+- **Context**: The viral nature of social friendship quizzes invites automated abuse: automated quiz spamming, headless bots gaming leaderboard scores, and automated abuse report flooding. While the platform has Layer 1-3 defenses (Sliding window IP rate limits, honeypot inputs, >= 3s timing validation), high-reputation distributed botnets or rotating residential proxies could theoretically bypass IP quotas. The user requested Google reCAPTCHA v3 (Invisible) to defend write operations without degrading viral conversion or interrupting teenage mobile players with checkboxes or CAPTCHA puzzles.
+- **Decision**:
+  1. *Invisible reCAPTCHA v3 Protocol*: Utilize Google reCAPTCHA v3, executing transparently in the background and returning risk scores (0.0 to 1.0) rather than presenting intrusive visual challenges or checkboxes.
+  2. *Protected Write Endpoints*:
+     - Quiz Creation (`POST /api/quizzes`, action: `"create_quiz"`)
+     - Quiz Attempt Submission (`POST /api/quizzes/[quizCode]/attempts`, action: `"submit_attempt"`)
+     - Abuse Report Submission (`POST /api/reports`, action: `"submit_report"`)
+  3. *Unprotected Read/Identity Boundary*: Explicitly exclude `POST /api/users/identify` from reCAPTCHA to maintain instantaneous, zero-friction creator recognition on landing page load.
+  4. *Fail-Open Resilience*: Client-side execution in `lib/recaptcha-client.ts` uses a 4000ms safety timeout race condition. If a user has an ad-blocker (uBlock Origin, Brave Shields) blocking `google.com/recaptcha`, or experiences network timeout, `executeRecaptcha` resolves to `null`. On the server, `verifyRecaptchaV3` supports `RECAPTCHA_FAIL_OPEN="true"` and dev mode fail-open to ensure legitimate human players are never blocked.
+  5. *Test Mode & Environment Bypasses*: In `NODE_ENV === "test"` or when `RECAPTCHA_ENABLED === "false"`, server verification automatically bypasses with `bypassed: true, score: 1.0`, keeping CI/CD test runs lightning-fast and offline-capable.
+  6. *Thresholds & Action Verification*: Server verifies `score >= minScore` (default 0.5 or `process.env.RECAPTCHA_SCORE_THRESHOLD`) and matches `expectedAction` against `data.action`.
+  7. *Compliance Disclosures & UI Polish*: Include Google Terms and Privacy policy links in the review dock, player footer, and report modal. Style `.grecaptcha-badge` with `z-index: 40 !important` and safe margins in `app/globals.css` so it doesn't obstruct mobile CTA decks.
+- **Consequences**:
+  - *Positive*: Seamless zero-click protection against headless bots; 0% friction for teenage mobile players; ad-blocker users are not stranded; full test suite automation without live external Google API dependencies.
+  - *Negative*: Relies on Google reCAPTCHA v3 backend availability unless fail-open is enabled.

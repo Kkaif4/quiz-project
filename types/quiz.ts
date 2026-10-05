@@ -199,6 +199,7 @@ export interface CreateQuizInput {
   }[];
   settings?: Partial<IQuizSettings>;
   website?: string; // Anti-bot honeypot
+  recaptchaToken?: string | null;
 }
 
 export interface SubmitAttemptInput {
@@ -209,6 +210,7 @@ export interface SubmitAttemptInput {
   }[];
   durationSeconds: number;
   website?: string; // Anti-bot honeypot
+  recaptchaToken?: string | null;
 }
 
 export interface CreateReportInput {
@@ -216,6 +218,7 @@ export interface CreateReportInput {
   reason: ReportReason;
   description?: string;
   website?: string; // Anti-bot honeypot
+  recaptchaToken?: string | null;
 }
 
 export interface QuizCreationResult {

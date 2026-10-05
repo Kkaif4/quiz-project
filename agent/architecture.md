@@ -119,14 +119,19 @@ To eliminate drop-off from registration walls while maintaining persistent creat
                │ Pass
                ▼
 ┌───────────────────────────┐
-│ 5. Business Logic Handler │
+│ 5. Invisible reCAPTCHA v3 │ ──[Score < 0.5]─► 403 Forbidden
+└──────────────┬────────────┘
+               │ Pass (or fail-open bypass)
+               ▼
+┌───────────────────────────┐
+│ 6. Business Logic Handler │
 │    • Authoritative Scoring│
 │    • Projection of Answers│
 └──────────────┬────────────┘
                │
                ▼
 ┌───────────────────────────┐
-│ 6. Cached Mongoose Query  │
+│ 7. Cached Mongoose Query  │
 └───────────────────────────┘
 ```
 
@@ -218,4 +223,28 @@ To prevent quiz creators from accidentally taking their own quizzes or losing ac
 3. **Server-Side Auto-Routing on `/q/[quizCode]`**: The server component `app/q/[quizCode]/page.tsx` checks `cookies().get("quiz_owner_tokens")`. If candidate tokens match `ownerTokenHash` and `searchParams.preview !== "true"`, the server immediately executes `redirect("/manage/" + matchedToken)`. If `preview === "true"`, it renders an **Owner Preview Floating Banner** with a direct link back to the dashboard.
 4. **Client-Side Shield & Owner Welcome Screen (`QuizPlayer.tsx`)**: If cookies were purged or blocked, `QuizPlayer` queries `/api/quizzes/[quizCode]/owner-check` using client tokens and browser fingerprint. If verified as owner, it renders the **Owner Welcome Screen** with actions to open the dashboard, copy the share link, or toggle preview mode. Creators are never forced to take their own quiz.
 5. **Bulletproof Creation Transition (`QuizCreator.tsx`)**: Displays an instant celebratory overlay upon creation and triggers `window.location.assign(result.manageUrl)` for guaranteed hard navigation across mobile browsers.
+
+---
+
+## 12. Google reCAPTCHA v3 Invisible Bot Defense Architecture
+
+To protect viral write operations from automated botnets and leaderboard pollution without adding UI friction or puzzle challenges for teenage mobile players:
+
+1. **Invisible reCAPTCHA v3 Client Layer (`lib/recaptcha-client.ts`, `hooks/useRecaptchaV3.ts`)**:
+   - Dynamically loads `https://www.google.com/recaptcha/api.js?render=${siteKey}`.
+   - Executes `executeRecaptcha(action)` with a 4000ms safety timeout race condition.
+   - Fail-open for client ad-blockers: resolves to `null` so legitimate human users are never blocked.
+2. **Server-Side Verification Engine (`lib/recaptcha.ts`)**:
+   - Verifies tokens against `https://www.google.com/recaptcha/api/siteverify` using `fetch` with 5-second `AbortSignal.timeout`.
+   - Compares risk score against threshold (`score >= minScore`, default 0.5 or `process.env.RECAPTCHA_SCORE_THRESHOLD`).
+   - Verifies expected action matches (`"create_quiz"`, `"submit_attempt"`, `"submit_report"`).
+   - Test mode bypass: automatically passes with `bypassed: true` when `NODE_ENV === "test"` or `RECAPTCHA_ENABLED === "false"`.
+3. **Protected Touchpoints**:
+   - Quiz Creation (`POST /api/quizzes`, action: `"create_quiz"`).
+   - Quiz Attempts (`POST /api/quizzes/[quizCode]/attempts`, action: `"submit_attempt"`).
+   - Abuse Reports (`POST /api/reports`, action: `"submit_report"`).
+   - Excluded: `/api/users/identify` (preserves zero-friction instant returning creator detection).
+4. **UI & Styling**:
+   - Google Terms & Privacy links rendered across review step, player footer, and report modal.
+   - `.grecaptcha-badge` set to `z-index: 40 !important` with safe margin to avoid obstructing mobile action docks.
 

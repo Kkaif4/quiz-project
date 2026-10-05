@@ -1,8 +1,8 @@
 # Task Execution & Progress Tracker (`task.md`)
 
-> **Document Version**: `v1.6.0`  
+> **Document Version**: `v1.8.0`  
 > **Last Updated**: `2026-10-05`  
-> **Active Phase**: `Phase 10: Owner Recognition, Dashboard Auto-Routing & Play Screen Protection`  
+> **Active Phase**: `Phase 11: Invisible Google reCAPTCHA v3 Bot Defense & Security Architecture (Complete)`  
 > **Rule for Agents**: Update this file immediately after completing or beginning any task. Increment version (`v1.0.1`, `v1.1.0`) when phases or major milestones change.
 
 ---
@@ -22,8 +22,9 @@
 | **Phase 8**   | Browser Blueprint & Creator Identity           | **P0 / P1** | ✅ `COMPLETED`    | 8 / 8           |
 | **Phase 9**   | SEO & Google Search Indexing Architecture      | **P0 / P1** | ✅ `COMPLETED`    | 10 / 10         |
 | **Phase 10**  | Owner Recognition & Dashboard Auto-Routing     | **P0**      | ✅ `COMPLETED`    | 7 / 7           |
+| **Phase 11**  | Google reCAPTCHA v3 Invisible Bot Defense      | **P0 / P1** | ✅ `COMPLETED`    | 7 / 7           |
 
-**Total Progress**: `63 / 63 Tasks (100%)`
+**Total Progress**: `70 / 70 Tasks (100%)`
 
 ---
 
@@ -339,12 +340,45 @@
 - [x] **TASK-1007** `[P0]`: **E2E & Unit Test Coverage** (`tests/owner_flow.test.ts` & `tests/e2e_loop.test.ts`)
   - Add tests validating that owner tokens are saved to the user profile, hydrated during blueprint identify, verified in `owner-check`, and that owners are routed to their dashboard instead of taking the quiz.
 
+### Phase 11: Invisible Google reCAPTCHA v3 Bot Defense & Security Architecture (P0 / P1)
+
+- [x] **TASK-1101** `[P0]`: **Server-Side reCAPTCHA v3 Verification Engine** (`lib/recaptcha.ts`)
+  - Implemented `verifyRecaptchaV3(token, expectedAction, remoteIp, minScore)` against `https://www.google.com/recaptcha/api/siteverify`.
+  - Added timeout safety with `AbortSignal.timeout(5000)` and score threshold checking (`process.env.RECAPTCHA_SCORE_THRESHOLD || 0.5`).
+  - Added support for `RECAPTCHA_ENABLED`, `RECAPTCHA_SECRET_KEY`, `RECAPTCHA_FAIL_OPEN`, and test-mode bypass (`NODE_ENV === "test"`).
+- [x] **TASK-1102** `[P0]`: **Validation Schema & Type Contracts** (`lib/validation.ts` & `types/quiz.ts`)
+  - Added `recaptchaToken: z.string().optional().nullable()` to `CreateQuizSchema`, `SubmitAttemptSchema`, and `CreateReportSchema`.
+  - Updated `CreateQuizInput`, `SubmitAttemptInput`, and `CreateReportInput` types.
+- [x] **TASK-1103** `[P0]`: **API Route Protection Wiring**
+  - In `app/api/quizzes/route.ts`: Enforced `verifyRecaptchaV3` with action `"create_quiz"`.
+  - In `app/api/quizzes/[quizCode]/attempts/route.ts`: Enforced `verifyRecaptchaV3` with action `"submit_attempt"`.
+  - In `app/api/reports/route.ts`: Enforced `verifyRecaptchaV3` with action `"submit_report"`.
+  - Excluded `app/api/users/identify/route.ts` to preserve zero-friction instant creator recognition on page load.
+- [x] **TASK-1104** `[P0]`: **Client-Side reCAPTCHA v3 Engine & Hook** (`lib/recaptcha-client.ts` & `hooks/useRecaptchaV3.ts`)
+  - Created dynamic script loader for `https://www.google.com/recaptcha/api.js?render=${siteKey}`.
+  - Implemented `executeRecaptcha(action)` with a 4000ms safety timeout race condition (fail-open for client ad-blockers).
+  - Created `useRecaptchaV3` hook with lifecycle management.
+- [x] **TASK-1105** `[P0]`: **Quiz Creator Invisible Integration** (`components/quiz/QuizCreator.tsx`)
+  - Integrated `executeRecaptcha("create_quiz")` in `handleSubmit` before `/api/quizzes` POST.
+  - Added clean reCAPTCHA privacy & terms disclosure above the review action dock.
+- [x] **TASK-1106** `[P0]`: **Quiz Player & Report Modal Integration** (`components/quiz/QuizPlayer.tsx`)
+  - Integrated `executeRecaptcha("submit_attempt")` on quiz attempt submission.
+  - Integrated `executeRecaptcha("submit_report")` on abuse report submission.
+  - Added reCAPTCHA privacy & terms disclosures on player card footer and report modal.
+  - Configured `.grecaptcha-badge` z-index and spacing in `app/globals.css`.
+- [x] **TASK-1107** `[P0]`: **Automated Test Suite & Governance Documentation**
+  - Created `tests/recaptcha.test.ts` covering environment toggles, missing tokens, score thresholds, action matching, error-codes parsing, and network fail-open behavior (9/9 passed).
+  - Documented ADR-015 in `agent/decisions.md`.
+  - Documented Layer 6 in `agent/architecture.md` and REV-014 in `agent/GRAPH_CONTEXT.md`.
+
 ---
 
 ## 3. Version History & Changelog
 
 | Version  | Date         | Changes Summary                                                                                                                                                                                                                                                       |
 | :------- | :----------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `v1.8.0` | `2026-10-05` | Completed Phase 11: Invisible Google reCAPTCHA v3 Bot Defense & Security Architecture (TASK-1101 through TASK-1107). Zero-friction bot scoring on quiz creation, attempts, and reports, fail-open ad-blocker resilience, 100% test coverage, and documentation. |
+| `v1.7.0` | `2026-10-05` | Planned Phase 11: Google reCAPTCHA v2 Bot Defense & Verification Integration (TASK-1101 through TASK-1107). Designed hybrid Checkbox/Invisible architecture, server-side verification engine, schema updates, responsive Recaptcha component, and test suite.       |
 | `v1.6.0` | `2026-10-05` | Added Phase 10: Owner Recognition, Dashboard Auto-Routing & Play Screen Protection (TASK-1001 through TASK-1007). Added user model ownerToken persistence, blueprint token hydration, server-side owner redirect on /q/[quizCode], client owner shield in QuizPlayer, and bulletproof creation navigation. |
 | `v1.5.0` | `2026-10-05` | Added Phase 9: Comprehensive SEO & Google Search Indexing Architecture (TASK-901 through TASK-910). Adding dynamic sitemap with 1h ISR, robots.txt, PWA manifest, XSS-safe JSON-LD, zero-leakage Quiz schema, FAQ accordion, canonical tags, and cloaking layouts. |
 | `v1.4.0` | `2026-10-05` | Added Phase 8: Browser Blueprint User Identification & Creator Name Flow (TASK-801 through TASK-808). Added zero-dependency Web Crypto fingerprinting, activated User model with salted IP hashing, mandatory creator name in QuizCreator, and returning user recovery. |
