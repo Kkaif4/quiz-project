@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+  <defs>
+    <linearGradient id="bfBg" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FDF0F0" />
+      <stop offset="100%" stop-color="#F7DADA" />
+    </linearGradient>
+    <linearGradient id="bfHeart" x1="12" y1="12" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#EAA6A6" />
+      <stop offset="100%" stop-color="#D99A9A" />
+    </linearGradient>
+  </defs>
+
+  <!-- Container Pill -->
+  <rect x="2" y="2" width="44" height="44" rx="14" fill="url(#bfBg)" stroke="#D99A9A" stroke-width="1.5" />
+
+  <!-- Two Interlocking Hearts -->
+  <!-- Left Heart -->
+  <path d="M 21 16 C 18 13, 12 14, 12 19 C 12 24, 21 31, 21 31 C 21 31, 30 24, 30 19 C 30 14, 24 13, 21 16 Z" fill="url(#bfHeart)" stroke="#4B344D" stroke-width="1.6" stroke-linejoin="round" />
+  
+  <!-- Right Overlay Heart -->
+  <path d="M 27 18 C 25 15.5, 20 16.5, 20 20.5 C 20 24.5, 27 30, 27 30 C 27 30, 34 24.5, 34 20.5 C 34 16.5, 29 15.5, 27 18 Z" fill="#F3D7A4" stroke="#4B344D" stroke-width="1.4" opacity="0.9" stroke-linejoin="round" />
+
+  <!-- Sparkle -->
+  <circle cx="36" cy="12" r="1.5" fill="#D1A76A" />
+</svg>

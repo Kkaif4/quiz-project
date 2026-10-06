@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" width="1440" height="900" fill="none">
+  <defs>
+    <radialGradient id="darkCandlelight" cx="50%" cy="10%" r="55%">
+      <stop offset="0%" stop-color="#E6C88A" stop-opacity="0.16" />
+      <stop offset="40%" stop-color="#342638" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#17131A" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="darkPlumRose" cx="20%" cy="65%" r="50%">
+      <stop offset="0%" stop-color="#D89A9F" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#17131A" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="darkPlumLavender" cx="80%" cy="55%" r="45%">
+      <stop offset="0%" stop-color="#A985A9" stop-opacity="0.10" />
+      <stop offset="100%" stop-color="#17131A" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Dark Base -->
+  <rect width="1440" height="900" fill="#17131A" />
+
+  <!-- Layered Candlelight Glow -->
+  <rect width="1440" height="900" fill="url(#darkCandlelight)" />
+  <rect width="1440" height="900" fill="url(#darkPlumRose)" />
+  <rect width="1440" height="900" fill="url(#darkPlumLavender)" />
+</svg>

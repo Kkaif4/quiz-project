@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80" fill="none">
+  <defs>
+    <radialGradient id="pulseGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F3D7A4" stop-opacity="0.8" />
+      <stop offset="60%" stop-color="#D99A9A" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#6D526F" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="starburstGrad" x1="16" y1="16" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFDF5" />
+      <stop offset="40%" stop-color="#F3D7A4" />
+      <stop offset="100%" stop-color="#D1A76A" />
+    </linearGradient>
+  </defs>
+
+  <!-- Ambient Glow ring -->
+  <circle cx="40" cy="40" r="38" fill="url(#pulseGlow)" />
+
+  <!-- 8-Point Starburst Loader -->
+  <path d="M 40 10 Q 40 40 10 40 Q 40 40 40 70 Q 40 40 70 40 Q 40 40 40 10 Z" fill="url(#starburstGrad)" stroke="#4B344D" stroke-width="2" />
+  
+  <!-- Diagonal Inner Spikes -->
+  <path d="M 40 22 Q 40 40 22 40 Q 40 40 40 58 Q 40 40 58 40 Q 40 40 40 22 Z" fill="#FFF8F0" opacity="0.8" />
+
+  <!-- Center Core -->
+  <circle cx="40" cy="40" r="6" fill="#4B344D" />
+  <circle cx="40" cy="40" r="3" fill="#FFFDF5" />
+</svg>

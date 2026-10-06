@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+  <defs>
+    <linearGradient id="dcBg" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FCF6EB" />
+      <stop offset="100%" stop-color="#F5E4C4" />
+    </linearGradient>
+    <linearGradient id="lightningGrad" x1="14" y1="10" x2="34" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFF5D1" />
+      <stop offset="50%" stop-color="#F3D7A4" />
+      <stop offset="100%" stop-color="#D1A76A" />
+    </linearGradient>
+  </defs>
+
+  <!-- Container Pill -->
+  <rect x="2" y="2" width="44" height="44" rx="14" fill="url(#dcBg)" stroke="#D1A76A" stroke-width="1.5" />
+
+  <!-- Cozy Whimsical Lightning Bolt / Spark -->
+  <path d="M 27 10 L 16 25 L 24 25 L 20 38 L 33 22 L 25 22 L 27 10 Z" fill="url(#lightningGrad)" stroke="#4B344D" stroke-width="1.6" stroke-linejoin="round" />
+  
+  <!-- Laughing sparkles -->
+  <circle cx="14" cy="16" r="1.5" fill="#D99A9A" />
+  <circle cx="34" cy="32" r="2" fill="#B8A5C9" />
+</svg>

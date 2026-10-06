@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" fill="none">
+  <defs>
+    <linearGradient id="mascotBody" x1="12" y1="12" x2="84" y2="84" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFF0BE" />
+      <stop offset="50%" stop-color="#F3D7A4" />
+      <stop offset="100%" stop-color="#D1A76A" />
+    </linearGradient>
+    <linearGradient id="mascotCheek" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#EAA6A6" />
+      <stop offset="100%" stop-color="#D99A9A" />
+    </linearGradient>
+  </defs>
+
+  <!-- Shadow -->
+  <ellipse cx="48" cy="86" rx="28" ry="6" fill="#4B344D" fill-opacity="0.10" />
+
+  <!-- Lemon Body -->
+  <path d="M 22 55 C 15 40, 30 24, 52 24 C 72 24, 82 42, 76 60 C 70 76, 44 82, 28 72 C 20 67, 16 60, 22 55 Z" fill="url(#mascotBody)" stroke="#4B344D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Left pip & Right pip -->
+  <path d="M 20 53 C 14 51, 12 47, 16 43" stroke="#4B344D" stroke-width="2.2" stroke-linecap="round" />
+  <path d="M 76 57 C 82 61, 84 65, 80 69" stroke="#4B344D" stroke-width="2.2" stroke-linecap="round" />
+
+  <!-- Botanical Leaf on head -->
+  <path d="M 54 26 C 60 12, 78 10, 84 18 C 86 30, 74 36, 58 30 Z" fill="#A8B89A" stroke="#2D3B26" stroke-width="2" stroke-linejoin="round" />
+  <path d="M 56 26 C 66 22, 74 20, 80 18" stroke="#2D3B26" stroke-width="1.4" stroke-linecap="round" />
+
+  <!-- Happy Smiling Eyes (curved arcs) -->
+  <path d="M 38 48 C 40 43, 46 43, 48 48" stroke="#241C24" stroke-width="2.4" stroke-linecap="round" fill="none" />
+  <path d="M 58 48 C 60 43, 66 43, 68 48" stroke="#241C24" stroke-width="2.4" stroke-linecap="round" fill="none" />
+
+  <!-- Cute Rosy Cheeks -->
+  <ellipse cx="34" cy="54" rx="4" ry="2.5" fill="url(#mascotCheek)" opacity="0.75" />
+  <ellipse cx="72" cy="54" rx="4" ry="2.5" fill="url(#mascotCheek)" opacity="0.75" />
+
+  <!-- Happy Smile with tiny tongue -->
+  <path d="M 47 56 C 50 62, 56 62, 59 56" stroke="#241C24" stroke-width="2.2" stroke-linecap="round" fill="none" />
+
+  <!-- Tiny sparkle -->
+  <path d="M 30 30 L 32 35 L 37 37 L 32 39 L 30 44 L 28 39 L 23 37 L 28 35 Z" fill="#FFF8F0" stroke="#F3D7A4" stroke-width="0.8" />
+</svg>

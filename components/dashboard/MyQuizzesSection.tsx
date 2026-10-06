@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   Sparkles,
@@ -15,6 +16,8 @@ import {
 import type { IUserQuizSummary } from "@/types/quiz";
 import { formatRelativeTime } from "@/lib/utils";
 import { getBrowserFingerprint } from "@/lib/fingerprint";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 export interface MyQuizzesSectionProps {
   serverQuizzes: IUserQuizSummary[];
@@ -33,7 +36,7 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
       try {
         if (typeof window === "undefined") return;
 
-        // 1. Sync via Browser Blueprint (device identity recovery)
+        // 1. Sync via Browser Blueprint
         const fp = await getBrowserFingerprint();
         if (fp && isMounted) {
           fetch("/api/users/identify", {
@@ -54,7 +57,6 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
               ) {
                 const newQuizzes: IUserQuizSummary[] = data.data.quizzes;
 
-                // Sync newly discovered ownerTokens into client localStorage
                 try {
                   if (window.localStorage) {
                     const raw = localStorage.getItem("quiz_owner_tokens");
@@ -86,7 +88,6 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
                   console.warn("Could not sync tokens to localStorage:", storageErr);
                 }
 
-                // TASK-1003: Safe Deduplication & Merging (ownerToken never overwritten by empty string)
                 setQuizzes((prev) => {
                   const quizMap = new Map<string, IUserQuizSummary>();
                   for (const q of prev) {
@@ -124,11 +125,12 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
         const localTokens: string[] = raw ? JSON.parse(raw) : [];
 
         if (!Array.isArray(localTokens) || localTokens.length === 0) {
-          // If localStorage is empty but server has quizzes, backfill localStorage
           if (serverQuizzes.length > 0) {
             const serverTokens = serverQuizzes
               .map((q) => q.ownerToken)
-              .filter((t): t is string => typeof t === "string" && t.length > 0);
+              .filter(
+                (t): t is string => typeof t === "string" && t.length > 0,
+              );
             localStorage.setItem(
               "quiz_owner_tokens",
               JSON.stringify(serverTokens),
@@ -137,14 +139,14 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
           return;
         }
 
-        // Check if localStorage contains tokens unknown to the server-rendered list
         const knownTokens = new Set(
           quizzes.map((q) => q.ownerToken).filter(Boolean),
         );
-        const missingTokens = localTokens.filter((token) => !knownTokens.has(token));
+        const missingTokens = localTokens.filter(
+          (token) => !knownTokens.has(token),
+        );
 
         if (missingTokens.length > 0) {
-          // Fetch missing quizzes from multi-quiz hub endpoint
           fetch("/api/quizzes/my-quizzes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -155,7 +157,6 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
               if (!isMounted) return;
               if (data.success && Array.isArray(data.data)) {
                 const fetchedQuizzes: IUserQuizSummary[] = data.data;
-                // Deduplicate and merge by quiz code
                 setQuizzes((prev) => {
                   const quizMap = new Map<string, IUserQuizSummary>();
                   for (const q of prev) {
@@ -210,8 +211,38 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
     }
   };
 
+  // Upgraded Empty State using empty-quizzes-cozy.svg
   if (quizzes.length === 0) {
-    return null;
+    return (
+      <Card className="w-full rounded-3xl p-6 sm:p-8 text-center space-y-4 pt-6">
+        <Image
+          src="/empty-quizzes-cozy.svg"
+          alt="No quizzes yet"
+          width={180}
+          height={150}
+          className="mx-auto object-contain drop-shadow-xs"
+        />
+        <div className="space-y-1">
+          <h3 className="text-base sm:text-lg font-black text-[var(--text-primary)]">
+            {userName ? `Welcome back, ${userName}!` : "Your Active Quizzes"}
+          </h3>
+          <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] max-w-sm mx-auto">
+            {userName
+              ? "You haven't created any quizzes on this device yet. Ready to make a personalized challenge for your friends?"
+              : "No quizzes found on this device yet. Create one now and challenge your friends!"}
+          </p>
+        </div>
+        <Link href="/create" className="inline-block max-w-full">
+          <Button
+            variant="premium"
+            size="lg"
+            leftIcon={<Sparkles className="w-4 h-4 text-[#8A5B17]" />}
+          >
+            Create Your First Quiz
+          </Button>
+        </Link>
+      </Card>
+    );
   }
 
   return (
@@ -219,11 +250,11 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
       {/* Section Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-2xl bg-violet-500/15 border border-violet-500/30 flex items-center justify-center text-violet-400 shadow-xs">
+          <div className="w-9 h-9 rounded-2xl bg-[var(--color-plum)]/10 border border-[var(--color-plum)]/20 flex items-center justify-center text-[var(--color-plum)] shadow-xs">
             {userName ? (
-              <UserIcon className="w-4 h-4 text-violet-300" />
+              <UserIcon className="w-4 h-4 text-[var(--color-plum)]" />
             ) : (
-              <Sparkles className="w-4 h-4 text-violet-400" />
+              <Sparkles className="w-4 h-4 text-[var(--color-plum)]" />
             )}
           </div>
           <div>
@@ -232,13 +263,13 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
             </h2>
             <p className="text-xs font-medium text-[var(--text-secondary)]">
               {userName
-                ? "Quizzes linked to this device & browser footprint"
+                ? "Quizzes linked to this device"
                 : "Quizzes you created on this device"}
             </p>
           </div>
         </div>
 
-        <span className="text-xs font-bold text-violet-300 px-3 py-1 rounded-full bg-violet-500/15 border border-violet-500/25">
+        <span className="text-xs font-bold text-[var(--color-plum)] px-3 py-1 rounded-full bg-[var(--color-plum)]/10 border border-[var(--color-plum)]/20">
           {quizzes.length} {quizzes.length === 1 ? "quiz" : "quizzes"}
         </span>
       </div>
@@ -250,9 +281,9 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
           const isCopied = copiedCode === quiz.code;
 
           return (
-            <div
+            <Card
               key={quiz.code}
-              className="card-surface rounded-3xl p-5 sm:p-6 flex flex-col justify-between space-y-4 hover:border-violet-500/40 transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
+              className="rounded-3xl p-5 sm:p-6 flex flex-col justify-between space-y-4 hover:border-[var(--color-plum)]/30 transition-all"
             >
               {/* Top: Status & Title */}
               <div className="space-y-2">
@@ -260,13 +291,15 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
                   <span
                     className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
                       isLive
-                        ? "bg-emerald-500/15 border-emerald-500/35 text-emerald-400"
-                        : "bg-amber-500/15 border-amber-500/35 text-amber-400"
+                        ? "bg-[var(--accent-sage)]/15 border-[var(--accent-sage)]/35 text-[var(--accent-sage)]"
+                        : "bg-[var(--accent-champagne)]/25 border-[var(--accent-champagne)]/40 text-[#8A5B17]"
                     }`}
                   >
                     <span
                       className={`w-1.5 h-1.5 rounded-full ${
-                        isLive ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
+                        isLive
+                          ? "bg-[var(--accent-sage)] animate-pulse"
+                          : "bg-[#8A5B17]"
                       }`}
                     />
                     <span>{isLive ? "Live" : "Paused"}</span>
@@ -285,7 +318,7 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
               {/* Middle: Stats Badges */}
               <div className="flex items-center gap-4 py-2.5 border-y border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-secondary)]">
                 <div className="flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-violet-400" />
+                  <Users className="w-3.5 h-3.5 text-[var(--color-plum)]" />
                   <span>
                     <strong className="text-[var(--text-primary)] font-bold">
                       {quiz.stats.attempts}
@@ -295,7 +328,7 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
                 </div>
 
                 <div className="flex items-center gap-1.5">
-                  <Eye className="w-3.5 h-3.5 text-indigo-400" />
+                  <Eye className="w-3.5 h-3.5 text-[var(--color-plum)]" />
                   <span>
                     <strong className="text-[var(--text-primary)] font-bold">
                       {quiz.stats.views}
@@ -305,49 +338,55 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
                 </div>
               </div>
 
-              {/* Bottom: Action Buttons (56px min touch target) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              {/* Bottom: Action Buttons (UI-009 overflow safe) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 w-full">
                 {quiz.ownerToken ? (
-                  <Link
-                    href={`/manage/${quiz.ownerToken}`}
-                    className="min-h-[56px] py-4 px-4 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:brightness-110 active:scale-[0.98] transition-all font-bold text-xs sm:text-sm shadow-md shadow-violet-600/25 flex items-center justify-center gap-2 cursor-pointer glow-purple"
-                  >
-                    <KeyRound className="w-4 h-4 text-white/90" />
-                    <span>Manage / Leaderboard</span>
-                    <ChevronRight className="w-4 h-4 text-white/70 ml-auto sm:ml-0" />
+                  <Link href={`/manage/${quiz.ownerToken}`} className="w-full">
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      fullWidth
+                      className="px-3"
+                      leftIcon={<KeyRound className="w-4 h-4 text-white/90" />}
+                      rightIcon={<ChevronRight className="w-4 h-4 text-white/70 ml-auto sm:ml-0" />}
+                    >
+                      <span>Manage</span>
+                    </Button>
                   </Link>
                 ) : (
-                  <Link
-                    href={`/q/${quiz.code}`}
-                    className="min-h-[56px] py-4 px-4 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:brightness-110 active:scale-[0.98] transition-all font-bold text-xs sm:text-sm shadow-md shadow-violet-600/25 flex items-center justify-center gap-2 cursor-pointer glow-purple"
-                  >
-                    <Eye className="w-4 h-4 text-white/90" />
-                    <span>View Quiz</span>
-                    <ChevronRight className="w-4 h-4 text-white/70 ml-auto sm:ml-0" />
+                  <Link href={`/q/${quiz.code}`} className="w-full">
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      fullWidth
+                      className="px-3"
+                      leftIcon={<Eye className="w-4 h-4 text-white/90" />}
+                      rightIcon={<ChevronRight className="w-4 h-4 text-white/70 ml-auto sm:ml-0" />}
+                    >
+                      <span>View Quiz</span>
+                    </Button>
                   </Link>
                 )}
 
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="lg"
+                  fullWidth
+                  className="px-3"
                   onClick={() => handleCopyLink(quiz.code)}
-                  className="min-h-[56px] py-4 px-4 rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] hover:border-violet-500/50 hover:bg-violet-500/10 active:scale-[0.98] transition-all font-semibold text-xs sm:text-sm text-[var(--text-primary)] flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                >
-                  {isCopied ? (
-                    <>
-                      <Check className="w-4 h-4 text-emerald-400" />
-                      <span className="text-emerald-400 font-bold">
-                        Link Copied!
-                      </span>
-                    </>
-                  ) : (
-                    <>
+                  leftIcon={
+                    isCopied ? (
+                      <Check className="w-4 h-4 text-[var(--accent-sage)]" />
+                    ) : (
                       <Share2 className="w-4 h-4 text-[var(--text-muted)]" />
-                      <span>Share Link</span>
-                    </>
-                  )}
-                </button>
+                    )
+                  }
+                >
+                  <span>{isCopied ? "Link Copied!" : "Share Link"}</span>
+                </Button>
               </div>
-            </div>
+            </Card>
           );
         })}
       </div>
