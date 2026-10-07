@@ -1,9 +1,11 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { getAttemptResultByCode } from "@/lib/quiz";
 import { QuizResult } from "@/components/quiz/QuizResult";
+import { BrandLogo } from "@/components/ui/BrandLogo";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 interface ResultPageProps {
   params: Promise<{
@@ -79,24 +81,20 @@ export default async function ResultPage({ params }: ResultPageProps) {
   return (
     <div className="min-h-screen text-[var(--text-primary)] flex flex-col justify-between">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-30 bg-[var(--bg-primary)]/80 backdrop-blur-md border-b border-[var(--border-subtle)]">
+      <header className="sticky top-0 z-30 bg-[var(--bg-primary)]/85 backdrop-blur-md border-b border-[var(--border-subtle)]">
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-violet-500/20 border border-violet-500/35 flex items-center justify-center text-violet-300 shadow-xs glow-purple">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <span className="font-extrabold text-[var(--text-primary)] tracking-tight text-base sm:text-lg">
-              LemonQuiz
-            </span>
-          </Link>
+          <BrandLogo size={32} textClassName="text-base sm:text-lg" />
 
-          <Link
-            href="/create"
-            className="text-xs font-bold px-3.5 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:brightness-110 active:scale-95 transition-all shadow-xs flex items-center gap-1.5 glow-purple"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Create Quiz</span>
-          </Link>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle />
+            <Link
+              href="/create"
+              className="btn-primary-cozy py-2 px-3.5 text-xs shadow-xs"
+            >
+              <Plus className="w-3.5 h-3.5 text-white/90" />
+              <span>Create Quiz</span>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -107,7 +105,7 @@ export default async function ResultPage({ params }: ResultPageProps) {
 
       {/* Footer */}
       <footer className="py-4 text-center text-xs text-[var(--text-muted)] border-t border-[var(--border-subtle)]">
-        <span>LemonQuiz &bull; The Ultimate Friendship Test</span>
+        <span>LemonQuiz &bull; The Cozy Friendship Test</span>
       </footer>
     </div>
   );

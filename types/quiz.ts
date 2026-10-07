@@ -145,7 +145,7 @@ export type ReportReason =
   | "impersonation"
   | "other";
 
-export type ReportStatus = "pending" | "reviewed" | "resolved";
+export type ReportStatus = "pending" | "reviewed" | "resolved" | "dismissed";
 
 /**
  * Content moderation report document interface.

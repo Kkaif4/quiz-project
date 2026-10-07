@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 180" width="140" height="180" fill="none">
+  <defs>
+    <linearGradient id="leafGradRight" x1="130" y1="10" x2="10" y2="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#C2D1B6" />
+      <stop offset="60%" stop-color="#A8B89A" />
+      <stop offset="100%" stop-color="#889C79" />
+    </linearGradient>
+  </defs>
+
+  <!-- Branch stem -->
+  <path d="M 20 175 C 50 145, 95 100, 120 25" stroke="#6F8360" stroke-width="2.5" stroke-linecap="round" />
+
+  <!-- Leaves along branch -->
+  <!-- Leaf 1 (Top) -->
+  <path d="M 120 25 C 130 10, 115 5, 105 15 C 100 25, 110 30, 120 25 Z" fill="url(#leafGradRight)" stroke="#5B6F4D" stroke-width="1.2" />
+  
+  <!-- Leaf 2 (Right) -->
+  <path d="M 102 55 C 125 48, 130 68, 115 78 C 105 83, 98 68, 102 55 Z" fill="url(#leafGradRight)" stroke="#5B6F4D" stroke-width="1.2" />
+
+  <!-- Leaf 3 (Left) -->
+  <path d="M 88 85 C 65 70, 55 88, 65 100 C 75 110, 90 98, 88 85 Z" fill="url(#leafGradRight)" stroke="#5B6F4D" stroke-width="1.2" />
+
+  <!-- Leaf 4 (Right lower) -->
+  <path d="M 72 120 C 95 118, 100 138, 85 148 C 70 152, 65 132, 72 120 Z" fill="url(#leafGradRight)" stroke="#5B6F4D" stroke-width="1.2" />
+
+  <!-- Tiny Gold Starburst sparkles -->
+  <circle cx="112" cy="45" r="2" fill="#F3D7A4" />
+  <circle cx="58" cy="130" r="1.5" fill="#D99A9A" />
+</svg>

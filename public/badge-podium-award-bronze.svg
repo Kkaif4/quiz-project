@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40" fill="none">
+  <defs>
+    <linearGradient id="bronzePodiumBg" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FCF0EC" />
+      <stop offset="100%" stop-color="#F2D7CE" />
+    </linearGradient>
+    <linearGradient id="bronzeGrad" x1="12" y1="12" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F8D4C8" />
+      <stop offset="50%" stop-color="#D99A9A" />
+      <stop offset="100%" stop-color="#AD6868" />
+    </linearGradient>
+  </defs>
+
+  <!-- Container -->
+  <rect x="2" y="2" width="36" height="36" rx="12" fill="url(#bronzePodiumBg)" stroke="#D99A9A" stroke-width="1.5" />
+
+  <!-- Laurel Wreath & Star Award -->
+  <circle cx="20" cy="20" r="10" fill="url(#bronzeGrad)" stroke="#4B344D" stroke-width="1.5" />
+
+  <!-- Star in Center -->
+  <path d="M 20 14 L 21.8 18 L 26 18.5 L 22.8 21.3 L 23.7 25.5 L 20 23.2 L 16.3 25.5 L 17.2 21.3 L 14 18.5 L 18.2 18 Z" fill="#FFFDF8" stroke="#4B344D" stroke-width="0.8" />
+</svg>

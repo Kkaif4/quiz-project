@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" width="1440" height="900" fill="none">
+  <defs>
+    <radialGradient id="lightGlowTop" cx="50%" cy="15%" r="60%">
+      <stop offset="0%" stop-color="#F3D7A4" stop-opacity="0.30" />
+      <stop offset="50%" stop-color="#FFF9F2" stop-opacity="0.10" />
+      <stop offset="100%" stop-color="#FFF9F2" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="lightGlowLeft" cx="15%" cy="60%" r="50%">
+      <stop offset="0%" stop-color="#D99A9A" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#FFF9F2" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="lightGlowRight" cx="85%" cy="50%" r="45%">
+      <stop offset="0%" stop-color="#B8A5C9" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#FFF9F2" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Canvas background -->
+  <rect width="1440" height="900" fill="#FFF9F2" />
+  
+  <!-- Subtle Ambient Glow Washes -->
+  <rect width="1440" height="900" fill="url(#lightGlowTop)" />
+  <rect width="1440" height="900" fill="url(#lightGlowLeft)" />
+  <rect width="1440" height="900" fill="url(#lightGlowRight)" />
+</svg>

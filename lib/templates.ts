@@ -17,6 +17,7 @@ export interface QuizTemplate {
   badge: string;
   description: string;
   iconName: "HeartHandshake" | "Flame" | "Sparkles" | "Compass";
+  themeIcon?: string;
   colorClass: string;
   borderClass: string;
   questions: QuizTemplateQuestion[];
@@ -29,8 +30,9 @@ export const TEMPLATES: QuizTemplate[] = [
     badge: "Most Popular",
     description: "Find out which friend actually remembers your quirks, cravings, and habits.",
     iconName: "HeartHandshake",
-    colorClass: "bg-pink-500/15 text-pink-400 border border-pink-500/30",
-    borderClass: "border-pink-500/30 hover:border-pink-500/60",
+    themeIcon: "/theme-best-friends.svg",
+    colorClass: "bg-[var(--accent-rose)]/15 text-[var(--accent-rose)] border border-[var(--accent-rose)]/30",
+    borderClass: "border-[var(--accent-rose)]/30 hover:border-[var(--accent-rose)]/60",
     questions: [
       {
         id: "q_1",
@@ -112,8 +114,9 @@ export const TEMPLATES: QuizTemplate[] = [
     badge: "Vibe Check",
     description: "Deep questions to see who pays attention to the little things you do.",
     iconName: "Sparkles",
-    colorClass: "bg-purple-500/15 text-purple-400 border border-purple-500/30",
-    borderClass: "border-purple-500/30 hover:border-purple-500/60",
+    themeIcon: "/theme-warm-memories.svg",
+    colorClass: "bg-[var(--accent-lavender)]/15 text-[var(--accent-plum)] border border-[var(--accent-lavender)]/30",
+    borderClass: "border-[var(--accent-lavender)]/30 hover:border-[var(--accent-lavender)]/60",
     questions: [
       {
         id: "q_1",
@@ -183,8 +186,9 @@ export const TEMPLATES: QuizTemplate[] = [
     badge: "Chaos Level 100",
     description: "Hilarious household habits, unwashed dishes, and 2 AM kitchen raids.",
     iconName: "Flame",
-    colorClass: "bg-violet-500/15 text-violet-400 border border-violet-500/30",
-    borderClass: "border-violet-500/30 hover:border-violet-500/60",
+    themeIcon: "/theme-daily-chaos.svg",
+    colorClass: "bg-[var(--accent-champagne)]/25 text-[#8A5B17] dark:text-[#E6C88A] border border-[var(--accent-champagne)]/40",
+    borderClass: "border-[var(--accent-champagne)]/40 hover:border-[var(--accent-champagne)]/70",
     questions: [
       {
         id: "q_1",
@@ -254,8 +258,9 @@ export const TEMPLATES: QuizTemplate[] = [
     badge: "Core Memories",
     description: "Test who has known you long enough to remember your wild playground days.",
     iconName: "Compass",
-    colorClass: "bg-indigo-500/15 text-indigo-400 border border-indigo-500/30",
-    borderClass: "border-indigo-500/30 hover:border-indigo-500/60",
+    themeIcon: "/theme-favorites.svg",
+    colorClass: "bg-[var(--accent-sage)]/15 text-[var(--accent-sage)] border border-[var(--accent-sage)]/30",
+    borderClass: "border-[var(--accent-sage)]/30 hover:border-[var(--accent-sage)]/60",
     questions: [
       {
         id: "q_1",

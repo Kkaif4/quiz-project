@@ -43,22 +43,22 @@ export function ResultList({ history, questions }: ResultListProps) {
   };
 
   const getPercentagePillClass = (pct: number) => {
-    if (pct >= 90) return "bg-purple-500/15 border-purple-500/35 text-purple-300";
-    if (pct >= 70) return "bg-pink-500/15 border-pink-500/35 text-pink-300";
-    if (pct >= 40) return "bg-indigo-500/15 border-indigo-500/35 text-indigo-300";
-    return "bg-violet-950/40 border-violet-800/40 text-violet-300";
+    if (pct >= 90) return "bg-[var(--accent-sage)]/15 border-[var(--accent-sage)]/35 text-[var(--accent-sage)]";
+    if (pct >= 70) return "bg-[var(--accent-rose)]/15 border-[var(--accent-rose)]/35 text-[var(--accent-rose)]";
+    if (pct >= 40) return "bg-[var(--accent-lavender)]/20 border-[var(--accent-lavender)]/35 text-[var(--accent-plum)]";
+    return "bg-[var(--surface)] border-[var(--border-subtle)] text-[var(--text-muted)]";
   };
 
   return (
-    <div className="w-full card-surface rounded-3xl p-5 sm:p-6 space-y-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+    <div className="w-full card-cozy rounded-3xl p-5 sm:p-6 space-y-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-violet-500/15 border border-violet-500/30 flex items-center justify-center text-violet-400 shadow-xs">
+          <div className="w-10 h-10 rounded-2xl bg-[var(--accent-plum)]/10 border border-[var(--accent-plum)]/20 flex items-center justify-center text-[var(--accent-plum)] shadow-xs">
             <FileSpreadsheet className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-violet-400 block">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--accent-plum)] block">
               Answer Breakdown
             </span>
             <h3 className="text-base sm:text-lg font-black text-[var(--text-primary)] leading-tight">
@@ -67,7 +67,7 @@ export function ResultList({ history, questions }: ResultListProps) {
           </div>
         </div>
 
-        <span className="text-xs font-bold text-violet-300 self-start sm:self-auto px-3 py-1 rounded-full bg-violet-500/15 border border-violet-500/25">
+        <span className="text-xs font-bold text-[var(--accent-plum)] self-start sm:self-auto px-3 py-1 rounded-full bg-[var(--accent-plum)]/10 border border-[var(--accent-plum)]/20">
           {history.length} {history.length === 1 ? "submission" : "submissions"}
         </span>
       </div>
@@ -75,7 +75,7 @@ export function ResultList({ history, questions }: ResultListProps) {
       {/* Search Input Filter */}
       {history.length > 0 && (
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-violet-400">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[var(--accent-plum)]">
             <Search className="w-4 h-4" />
           </div>
           <input
@@ -83,13 +83,13 @@ export function ResultList({ history, questions }: ResultListProps) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by friend nickname..."
-            className="w-full min-h-[52px] pl-11 pr-16 py-2.5 rounded-2xl bg-[var(--input-bg)] border border-[var(--input-border)] focus:outline-none focus:ring-2 focus:ring-violet-500/25 focus:border-violet-500 text-sm font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-all"
+            className="w-full min-h-[52px] pl-11 pr-16 py-2.5 rounded-2xl bg-[var(--input-bg)] border border-[var(--input-border)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-plum)]/20 focus:border-[var(--accent-plum)] text-sm font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-all"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery("")}
-              className="absolute inset-y-0 right-0 pr-4 flex items-center text-violet-400 hover:text-violet-200 text-xs font-bold cursor-pointer"
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-[var(--accent-plum)] hover:underline text-xs font-bold cursor-pointer"
             >
               Clear
             </button>
@@ -99,13 +99,13 @@ export function ResultList({ history, questions }: ResultListProps) {
 
       {/* History Items */}
       {history.length === 0 ? (
-        <div className="py-8 px-4 text-center rounded-2xl bg-violet-500/10 border border-violet-500/20">
+        <div className="py-8 px-4 text-center rounded-2xl bg-[var(--accent-plum)]/5 border border-[var(--accent-plum)]/15">
           <p className="text-sm font-semibold text-[var(--text-secondary)]">
             No submissions recorded yet. Once friends complete the quiz, their detailed answers will appear here.
           </p>
         </div>
       ) : filteredHistory.length === 0 ? (
-        <div className="py-8 px-4 text-center rounded-2xl bg-violet-500/10 border border-violet-500/20">
+        <div className="py-8 px-4 text-center rounded-2xl bg-[var(--accent-plum)]/5 border border-[var(--accent-plum)]/15">
           <p className="text-sm font-semibold text-[var(--text-secondary)]">
             No friend matches &ldquo;{searchQuery}&rdquo;.
           </p>
@@ -124,7 +124,7 @@ export function ResultList({ history, questions }: ResultListProps) {
                 <button
                   type="button"
                   onClick={() => toggleExpand(attempt.code)}
-                  className="w-full min-h-[56px] p-4 text-left flex items-center justify-between gap-3 hover:bg-violet-500/5 active:scale-[0.99] transition-all cursor-pointer"
+                  className="w-full min-h-[56px] p-4 text-left flex items-center justify-between gap-3 hover:bg-[var(--accent-plum)]/5 active:scale-[0.99] transition-all cursor-pointer"
                 >
                   {/* Left: Nickname & Time */}
                   <div className="min-w-0">
@@ -158,7 +158,7 @@ export function ResultList({ history, questions }: ResultListProps) {
                       {attempt.percentage}%
                     </span>
 
-                    <div className="w-8 h-8 rounded-xl bg-violet-500/15 text-violet-300 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-[var(--surface)] text-[var(--text-secondary)] flex items-center justify-center border border-[var(--border-subtle)]">
                       {isExpanded ? (
                         <ChevronUp className="w-4 h-4" />
                       ) : (
@@ -170,8 +170,8 @@ export function ResultList({ history, questions }: ResultListProps) {
 
                 {/* Expanded Answer Key Comparison */}
                 {isExpanded && (
-                  <div className="px-4 pb-4 pt-2 border-t border-[var(--border-subtle)] bg-violet-500/5 space-y-3 animate-in fade-in duration-150">
-                    <div className="text-xs font-bold uppercase tracking-wider text-violet-400 mb-1">
+                  <div className="px-4 pb-4 pt-2 border-t border-[var(--border-subtle)] bg-[var(--accent-plum)]/5 space-y-3 animate-in fade-in duration-150">
+                    <div className="text-xs font-bold uppercase tracking-wider text-[var(--accent-plum)] mb-1">
                       Question by Question Comparison
                     </div>
 
@@ -195,7 +195,7 @@ export function ResultList({ history, questions }: ResultListProps) {
                             key={question.id}
                             className={`p-3.5 rounded-xl border text-xs sm:text-sm ${
                               isCorrect
-                                ? "bg-emerald-500/10 border-emerald-500/30"
+                                ? "bg-[var(--accent-sage)]/10 border-[var(--accent-sage)]/30"
                                 : "bg-rose-500/10 border-rose-500/30"
                             }`}
                           >
@@ -204,8 +204,8 @@ export function ResultList({ history, questions }: ResultListProps) {
                               <span
                                 className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-xs font-black ${
                                   isCorrect
-                                    ? "bg-emerald-500/20 text-emerald-400"
-                                    : "bg-rose-500/20 text-rose-400"
+                                    ? "bg-[var(--accent-sage)]/20 text-[var(--accent-sage)]"
+                                    : "bg-rose-500/20 text-rose-500"
                                 }`}
                               >
                                 {isCorrect ? (
@@ -224,7 +224,7 @@ export function ResultList({ history, questions }: ResultListProps) {
                             {/* Answers Breakdown */}
                             <div className="pl-7 space-y-1 text-xs">
                               {isCorrect ? (
-                                <div className="text-emerald-400 font-semibold flex items-center gap-1.5">
+                                <div className="text-[var(--accent-sage)] font-semibold flex items-center gap-1.5">
                                   <span className="font-bold">
                                     Guessed correctly:
                                   </span>
@@ -232,13 +232,13 @@ export function ResultList({ history, questions }: ResultListProps) {
                                 </div>
                               ) : (
                                 <div className="space-y-1">
-                                  <div className="text-rose-400 font-medium flex items-center gap-1.5">
+                                  <div className="text-rose-500 font-medium flex items-center gap-1.5">
                                     <span className="font-bold">Guessed:</span>
                                     <span>
                                       {chosenOption?.text || "(No answer)"}
                                     </span>
                                   </div>
-                                  <div className="text-emerald-400 font-semibold flex items-center gap-1.5">
+                                  <div className="text-[var(--accent-sage)] font-semibold flex items-center gap-1.5">
                                     <span className="font-bold">
                                       Your answer:
                                     </span>

@@ -1,12 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   Crown,
-  Medal,
-  Award,
   Clock,
-  Users,
   Share2,
   Copy,
   Check,
@@ -14,6 +12,8 @@ import {
 } from "lucide-react";
 import type { ILeaderboardEntry } from "@/types/quiz";
 import { formatRelativeTime } from "@/lib/utils";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 export interface RankingProps {
   leaderboard: ILeaderboardEntry[];
@@ -23,7 +23,7 @@ export interface RankingProps {
 
 export function Ranking({ leaderboard, quizCode, shareUrl }: RankingProps) {
   const [copied, setCopied] = useState(false);
-  const effectiveShareUrl = shareUrl || `${process.env.NEXT_PUBLIC_APP_URL}/q/${quizCode}`;
+  const effectiveShareUrl = shareUrl || `${process.env.NEXT_PUBLIC_APP_URL || ""}/q/${quizCode}`;
 
   const handleCopy = async () => {
     try {
@@ -46,25 +46,44 @@ export function Ranking({ leaderboard, quizCode, shareUrl }: RankingProps) {
     switch (rank) {
       case 1:
         return (
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/35 text-amber-400 flex items-center justify-center shadow-xs shrink-0 glow-purple">
-            <Crown className="w-5 h-5 fill-amber-400 text-amber-400" />
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#E6C88A]/20 border border-[#E6C88A]/50 flex items-center justify-center shadow-xs shrink-0 relative overflow-hidden p-0.5">
+            <Image
+              src="/badge-podium-crown-gold.svg"
+              alt="1st Place Gold Champion Podium"
+              width={40}
+              height={40}
+              className="w-full h-full object-contain drop-shadow-xs"
+              priority
+            />
           </div>
         );
       case 2:
         return (
-          <div className="w-10 h-10 rounded-2xl bg-slate-400/15 border border-slate-400/35 text-slate-300 flex items-center justify-center shadow-xs shrink-0">
-            <Medal className="w-5 h-5 fill-slate-300 text-slate-300" />
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] flex items-center justify-center shadow-xs shrink-0 relative overflow-hidden p-0.5">
+            <Image
+              src="/badge-podium-medal-silver.svg"
+              alt="2nd Place Silver Podium"
+              width={40}
+              height={40}
+              className="w-full h-full object-contain drop-shadow-xs"
+            />
           </div>
         );
       case 3:
         return (
-          <div className="w-10 h-10 rounded-2xl bg-orange-500/15 border border-orange-500/35 text-orange-300 flex items-center justify-center shadow-xs shrink-0">
-            <Award className="w-5 h-5 fill-orange-400 text-orange-300" />
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[var(--accent-rose)]/15 border border-[var(--accent-rose)]/40 flex items-center justify-center shadow-xs shrink-0 relative overflow-hidden p-0.5">
+            <Image
+              src="/badge-podium-award-bronze.svg"
+              alt="3rd Place Bronze Podium"
+              width={40}
+              height={40}
+              className="w-full h-full object-contain drop-shadow-xs"
+            />
           </div>
         );
       default:
         return (
-          <div className="w-10 h-10 rounded-2xl bg-violet-500/10 border border-violet-500/20 text-violet-300 font-black text-sm flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] text-[var(--text-muted)] font-black text-sm flex items-center justify-center shrink-0">
             #{rank}
           </div>
         );
@@ -72,22 +91,22 @@ export function Ranking({ leaderboard, quizCode, shareUrl }: RankingProps) {
   };
 
   const getPercentagePillClass = (pct: number) => {
-    if (pct >= 90) return "bg-purple-500/15 border-purple-500/35 text-purple-300";
-    if (pct >= 70) return "bg-pink-500/15 border-pink-500/35 text-pink-300";
-    if (pct >= 40) return "bg-indigo-500/15 border-indigo-500/35 text-indigo-300";
-    return "bg-violet-950/40 border-violet-800/40 text-violet-300";
+    if (pct >= 90) return "bg-[var(--accent-sage)]/15 border-[var(--accent-sage)]/40 text-[var(--accent-sage)]";
+    if (pct >= 70) return "bg-[var(--accent-rose)]/15 border-[var(--accent-rose)]/40 text-[var(--accent-rose)]";
+    if (pct >= 40) return "bg-[var(--accent-lavender)]/20 border-[var(--accent-lavender)]/40 text-[var(--color-plum)]";
+    return "bg-[var(--surface)] border-[var(--border-subtle)] text-[var(--text-muted)]";
   };
 
   return (
-    <div className="w-full card-surface rounded-3xl p-5 sm:p-6 space-y-5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+    <Card className="w-full rounded-3xl p-5 sm:p-6 space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-violet-500/15 border border-violet-500/30 flex items-center justify-center text-violet-400 shadow-xs">
+          <div className="w-10 h-10 rounded-2xl bg-[var(--color-plum)]/10 border border-[var(--color-plum)]/20 flex items-center justify-center text-[var(--color-plum)] shadow-xs">
             <Crown className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-violet-400 block">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--color-plum)] block">
               Leaderboard
             </span>
             <h3 className="text-base sm:text-lg font-black text-[var(--text-primary)] leading-tight">
@@ -96,54 +115,59 @@ export function Ranking({ leaderboard, quizCode, shareUrl }: RankingProps) {
           </div>
         </div>
 
-        <span className="text-xs font-bold text-violet-300 px-3 py-1 rounded-full bg-violet-500/15 border border-violet-500/25">
+        <span className="text-xs font-bold text-[var(--color-plum)] px-3 py-1 rounded-full bg-[var(--color-plum)]/10 border border-[var(--color-plum)]/20">
           {leaderboard.length} {leaderboard.length === 1 ? "friend" : "friends"}
         </span>
       </div>
 
       {/* Empty State */}
       {leaderboard.length === 0 ? (
-        <div className="py-10 px-4 text-center rounded-2xl bg-violet-500/10 border border-violet-500/20 space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-violet-500/20 border border-violet-500/30 mx-auto flex items-center justify-center text-violet-400 shadow-xs">
-            <Users className="w-6 h-6" />
+        <div className="py-8 px-4 text-center rounded-2xl bg-[var(--color-plum)]/5 border border-[var(--color-plum)]/15 space-y-4">
+          <div className="w-28 h-24 mx-auto flex items-center justify-center">
+            <Image
+              src="/empty-quizzes-cozy.svg"
+              alt="No friend responses yet"
+              width={140}
+              height={110}
+              className="w-full h-full object-contain drop-shadow-xs"
+            />
           </div>
           <div className="space-y-1 max-w-sm mx-auto">
             <h4 className="text-base font-bold text-[var(--text-primary)]">
               No friend responses yet!
             </h4>
             <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] leading-relaxed">
-              Drop your quiz link into group chats or Instagram stories to see who tops your podium.
+              Drop your quiz link into group chats or stories to see who tops your podium.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2 max-w-md mx-auto">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2 max-w-md mx-auto w-full">
             <a
               href={getWhatsAppShareUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-auto min-h-[56px] py-4 px-6 rounded-2xl bg-[#25D366] text-white hover:bg-[#20ba59] active:scale-[0.98] transition-all font-bold text-sm shadow-md shadow-[#25D366]/20 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto flex-1 min-h-[56px] py-4 px-5 rounded-2xl bg-[#25D366] text-white hover:bg-[#20ba59] active:scale-[0.98] transition-all font-bold text-sm shadow-md shadow-[#25D366]/20 flex items-center justify-center gap-2 cursor-pointer max-w-full"
             >
-              <Share2 className="w-4 h-4" />
-              <span>Share on WhatsApp</span>
+              <Share2 className="w-4 h-4 shrink-0" />
+              <span className="truncate">Share on WhatsApp</span>
             </a>
 
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="lg"
+              className="w-full sm:w-auto flex-1 min-h-[56px] max-w-full"
               onClick={handleCopy}
-              className="w-full sm:w-auto min-h-[56px] py-4 px-6 rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] hover:border-violet-500/50 hover:bg-violet-500/10 active:scale-[0.98] transition-all font-semibold text-sm text-[var(--text-primary)] flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-            >
-              {copied ? (
-                <>
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span className="text-emerald-400 font-bold">Link Copied</span>
-                </>
-              ) : (
-                <>
+              leftIcon={
+                copied ? (
+                  <Check className="w-4 h-4 text-[var(--accent-sage)]" />
+                ) : (
                   <Copy className="w-4 h-4 text-[var(--text-muted)]" />
-                  <span>Copy Link</span>
-                </>
-              )}
-            </button>
+                )
+              }
+            >
+              {copied ? "Link Copied" : "Copy Link"}
+            </Button>
           </div>
         </div>
       ) : (
@@ -151,35 +175,44 @@ export function Ranking({ leaderboard, quizCode, shareUrl }: RankingProps) {
         <div className="space-y-2.5">
           {leaderboard.map((entry, index) => {
             const rank = index + 1;
+            const podiumHighlight =
+              rank === 1
+                ? "border-[#E6C88A]/60 bg-gradient-to-r from-[#FFFDF8] to-[var(--surface)] dark:from-[#2F2420] dark:to-[var(--surface)] shadow-xs ring-1 ring-[#E6C88A]/30"
+                : rank === 2
+                ? "border-[var(--border-subtle)] bg-[var(--surface)] shadow-xs"
+                : rank === 3
+                ? "border-[var(--accent-rose)]/30 bg-[var(--surface)] shadow-xs"
+                : "border-[var(--border-subtle)] bg-[var(--surface)]";
+
             return (
               <div
                 key={entry.code || `${entry.nickname}-${index}`}
-                className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] hover:border-violet-500/40 transition-all shadow-xs gap-3"
+                className={`flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border transition-all shadow-xs gap-3 min-h-[56px] hover:border-[var(--color-plum)]/30 ${podiumHighlight}`}
               >
                 {/* Left: Rank Badge + Nickname + Relative Time */}
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   {renderRankBadge(rank)}
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-[var(--text-primary)] text-sm sm:text-base truncate block">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-extrabold text-[var(--text-primary)] text-sm sm:text-base truncate block max-w-full">
                         {entry.nickname}
                       </span>
                       {rank === 1 && (
-                        <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/35">
-                          <Sparkles className="w-3 h-3 text-amber-400" />
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-[#8A5B17] dark:text-[#E6C88A] bg-[#E6C88A]/30 px-2 py-0.5 rounded-full border border-[#E6C88A]/50 shrink-0">
+                          <Sparkles className="w-3 h-3 text-[#8A5B17] dark:text-[#E6C88A]" />
                           Top Friend
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-1 text-[var(--text-muted)] text-xs font-medium mt-0.5">
-                      <Clock className="w-3 h-3" />
+                      <Clock className="w-3 h-3 shrink-0" />
                       <span>{formatRelativeTime(entry.createdAt)}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Right: Score + Percentage Pill */}
-                <div className="flex items-center gap-2.5 shrink-0">
+                <div className="flex items-center gap-2.5 shrink-0 ml-2">
                   <div className="text-right">
                     <span className="text-sm sm:text-base font-black text-[var(--text-primary)]">
                       {entry.score}
@@ -202,6 +235,6 @@ export function Ranking({ leaderboard, quizCode, shareUrl }: RankingProps) {
           })}
         </div>
       )}
-    </div>
+    </Card>
   );
 }

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+  <defs>
+    <linearGradient id="wmBg" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F4EFF8" />
+      <stop offset="100%" stop-color="#E2D9EB" />
+    </linearGradient>
+    <linearGradient id="wmPhoto" x1="10" y1="10" x2="38" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFDF8" />
+      <stop offset="100%" stop-color="#F8EFE3" />
+    </linearGradient>
+  </defs>
+
+  <!-- Container Pill -->
+  <rect x="2" y="2" width="44" height="44" rx="14" fill="url(#wmBg)" stroke="#B8A5C9" stroke-width="1.5" />
+
+  <!-- Back Polaroid Frame (Tilted Left) -->
+  <rect x="11" y="14" width="20" height="23" rx="3" transform="rotate(-12 21 25.5)" fill="#E8DDF2" stroke="#4B344D" stroke-width="1.3" />
+
+  <!-- Front Polaroid Frame (Tilted Right) -->
+  <rect x="17" y="13" width="20" height="23" rx="3" transform="rotate(8 27 24.5)" fill="url(#wmPhoto)" stroke="#4B344D" stroke-width="1.5" />
+  <!-- Inner Picture with Smile -->
+  <rect x="19" y="15" width="16" height="13" rx="1.5" transform="rotate(8 27 21.5)" fill="#F3D7A4" />
+  
+  <!-- Tiny Heart inside polaroid -->
+  <circle cx="27" cy="21" r="2.5" fill="#D99A9A" />
+</svg>
