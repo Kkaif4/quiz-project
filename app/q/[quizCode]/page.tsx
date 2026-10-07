@@ -2,11 +2,12 @@ import { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { Sparkles, Plus, Crown, ArrowRight } from "lucide-react";
+import { Plus, Crown, ArrowRight } from "lucide-react";
 import { getPublicQuizByCode, getMatchingOwnerToken } from "@/lib/quiz";
 import { QuizPlayer } from "@/components/quiz/QuizPlayer";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getBaseUrl } from "@/lib/seo";
+import { Button } from "@/components/ui/Button";
 
 interface QuizPageProps {
   params: Promise<{ quizCode: string }>;
@@ -66,7 +67,6 @@ export default async function QuizPage({
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const preview = resolvedSearchParams?.preview;
 
-  // TASK-1004: Server-Side Owner Detection via HTTP-only cookie
   let matchedToken: string | null = null;
   try {
     const cookieStore = await cookies();
@@ -78,7 +78,7 @@ export default async function QuizPage({
         const parsed = JSON.parse(rawCookie);
         if (Array.isArray(parsed)) {
           candidateTokens = parsed.filter(
-            (t): t is string => typeof t === "string" && t.length > 0,
+            (t): t is string => typeof t === "string" && t.length > 0
           );
         }
       } catch {
@@ -111,9 +111,6 @@ export default async function QuizPage({
   const baseUrl = getBaseUrl();
   const quizUrl = `${baseUrl}/q/${quiz.code}`;
 
-  // ZERO ANSWER KEY LEAKAGE SECURITY INVARIANT:
-  // hasPart provides questions and suggestedAnswer options only.
-  // acceptedAnswer and correctOptionId are NEVER emitted into JSON-LD.
   const quizSchema = {
     "@context": "https://schema.org",
     "@graph": [
@@ -164,44 +161,43 @@ export default async function QuizPage({
 
   return (
     <div className="min-h-screen text-[var(--text-primary)] flex flex-col justify-between">
-      {/* Quiz Structured Data (Zero Answer Leakage) */}
+      {/* Quiz Structured Data */}
       <JsonLd data={quizSchema} />
 
       {/* Top Navbar */}
-      <header className="sticky top-0 z-30 bg-[var(--bg-primary)]/80 backdrop-blur-md border-b border-[var(--border-subtle)]">
+      <header className="sticky top-0 z-30 bg-[var(--bg-primary)]/80 backdrop-blur-md border-b-2 border-[var(--border-subtle)]">
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-violet-500/20 border border-violet-500/35 flex items-center justify-center text-violet-300 shadow-xs glow-purple">
-              <Sparkles className="w-4 h-4" />
+          <Link href="/" className="inline-flex items-center group">
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border-2 border-[#2D1B0E] shadow-[0_3px_0_#2D1B0E] group-hover:-translate-y-0.5 group-hover:shadow-[0_4px_0_#2D1B0E] active:translate-y-[2px] active:shadow-[0_0px_0_#2D1B0E] transition-all">
+              <span className="text-lg group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300">🍋</span>
+              <span className="font-black tracking-tight text-base sm:text-lg">
+                <span className="text-[#2D1B0E]">Lemon</span><span className="text-[#FF6B8A]">Quiz</span>
+              </span>
             </div>
-            <span className="font-extrabold text-[var(--text-primary)] tracking-tight text-base sm:text-lg">
-              LemonQuiz
-            </span>
           </Link>
 
-          <Link
-            href="/create"
-            className="text-xs font-bold px-3.5 py-2 rounded-xl bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/30 text-violet-300 transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Create My Own</span>
+          <Link href="/create">
+            <Button variant="lemon" size="sm">
+              <Plus className="w-3.5 h-3.5 text-[#2D1B0E]" />
+              <span>Create My Own 🚀</span>
+            </Button>
           </Link>
         </div>
       </header>
 
-      {/* TASK-1004: Owner Preview Floating Banner */}
+      {/* Owner Preview Floating Banner */}
       {matchedToken && preview === "true" && (
-        <div className="bg-gradient-to-r from-violet-900/90 via-purple-900/90 to-indigo-900/90 border-b border-violet-500/40 px-4 py-2.5 backdrop-blur-md sticky top-16 z-20">
+        <div className="bg-[#FACC15]/20 border-b-2 border-[#FACC15]/40 px-4 py-2.5 backdrop-blur-md sticky top-16 z-20">
           <div className="max-w-2xl mx-auto flex items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2 text-violet-200 font-medium">
+            <div className="flex items-center gap-2 text-[#FDE047] font-black">
               <Crown className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>Owner Preview Mode &mdash; You created this quiz.</span>
+              <span>Owner Preview Mode — You created this quiz.</span>
             </div>
             <Link
               href={`/manage/${matchedToken}`}
-              className="px-3 py-1.5 rounded-xl bg-violet-500/30 hover:bg-violet-500/50 border border-violet-400/40 text-violet-100 font-bold transition-all flex items-center gap-1.5 shrink-0 active:scale-95 text-xs"
+              className="px-3 py-1.5 rounded-xl bg-[#FACC15] text-[#150E28] font-black transition-all flex items-center gap-1.5 shrink-0 active:scale-95 shadow-[0_2px_0_#CA8A04]"
             >
-              <span>Go to Owner Dashboard</span>
+              <span>Go to Dashboard</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>

@@ -2,85 +2,55 @@
 
 :root {
   /* =========================================================================
-     DARK MODE THEME (PRIMARY / DEFAULT)
-     Ages 12-20 Youth Aesthetic: Dark Violet + Midnight + Purple Glow
+     LIGHT MODE THEME (PRIMARY / DEFAULT)
+     Cute Candy-Pop & Pastel Stickerbook — Ages 13-20
      ========================================================================= */
-  --bg-primary: #080816;
-  --bg-secondary: #0F0B24;
-  --card-bg: #17132F;
-  --card-hover: #211A45;
-  --card-border: rgba(139, 92, 246, 0.22);
-  --input-bg: #0F0B24;
-  --input-border: rgba(139, 92, 246, 0.28);
-  --input-focus: #8B5CF6;
+  --bg-primary: #FFFBF5;
+  --bg-secondary: #FFF5EB;
+  --card-bg: #FFFFFF;
+  --card-hover: #FFF9F2;
+  --card-border: #FFE4CC;
+  --card-border-active: #FF8C42;
+  --input-bg: #FFFFFF;
+  --input-border: #FFE4CC;
+  --input-focus: #FF8C42;
 
   /* Typography Tokens */
-  --text-primary: #F8FAFC;
-  --text-secondary: #CBD5E1;
-  --text-muted: #94A3B8;
+  --text-primary: #2D1B0E;
+  --text-secondary: #6B5344;
+  --text-muted: #A89585;
+  --text-lemon: #E67700;
 
   /* Brand Accents */
-  --brand-violet: #8B5CF6;
-  --brand-purple: #A855F7;
-  --brand-lavender: #C084FC;
-  --brand-indigo: #6366F1;
-  --brand-love: #F472B6;
+  --brand-lemon: #FFB830;
+  --brand-lemon-shadow: #E09800;
+  --brand-violet: #B47AFF;
+  --brand-violet-shadow: #8B50E0;
+  --brand-coral: #FF6B8A;
+  --brand-coral-shadow: #E0456B;
+  --brand-indigo: #7C8FFF;
+  --brand-mint: #36D399;
+  --brand-mint-shadow: #1EAA78;
 
   /* Borders & Dividers */
-  --border-subtle: rgba(139, 92, 246, 0.18);
-  --border-strong: rgba(139, 92, 246, 0.35);
+  --border-subtle: #FFE8D6;
+  --border-strong: #FFD4B3;
 
-  /* Shadows & Glows */
-  --glow-purple: rgba(139, 92, 246, 0.18);
-  --glow-strong: rgba(139, 92, 246, 0.35);
-  --glow-love: rgba(244, 114, 182, 0.25);
+  /* Tactile Shadows (soft & cute) */
+  --shadow-tactile: 0 4px 0 #FFD4B3;
+  --shadow-tactile-lemon: 0 4px 0 #E09800;
+  --shadow-tactile-violet: 0 4px 0 #8B50E0;
+  --shadow-tactile-coral: 0 4px 0 #E0456B;
 
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
-  --gradient-love: linear-gradient(135deg, #F472B6 0%, #A855F7 100%);
-  --gradient-premium: linear-gradient(135deg, #C084FC 0%, #4F46E5 100%);
-  --gradient-card: linear-gradient(180deg, rgba(23, 19, 47, 0.85) 0%, rgba(15, 11, 36, 0.95) 100%);
+  --gradient-primary: linear-gradient(135deg, #FFB830 0%, #FF6B8A 100%);
+  --gradient-love: linear-gradient(135deg, #FF6B8A 0%, #B47AFF 100%);
+  --gradient-arcade: linear-gradient(135deg, #FFB830 0%, #B47AFF 100%);
+  --gradient-card: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 251, 245, 0.95) 100%);
 
   /* Tailwind Standard Mappings */
   --background: var(--bg-primary);
   --foreground: var(--text-primary);
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    /* =========================================================================
-       LIGHT MODE THEME (SOFT LAVENDER ATMOSPHERE)
-       ========================================================================= */
-    --bg-primary: #F8F7FF;
-    --bg-secondary: #F1EDFF;
-    --card-bg: #FFFFFF;
-    --card-hover: #EEE8FF;
-    --card-border: #E4DAFF;
-    --input-bg: #FFFFFF;
-    --input-border: #E4DAFF;
-    --input-focus: #8B5CF6;
-
-    /* Typography Tokens */
-    --text-primary: #171126;
-    --text-secondary: #51466A;
-    --text-muted: #817693;
-
-    /* Borders & Dividers */
-    --border-subtle: #E4DAFF;
-    --border-strong: #D1C2FF;
-
-    /* Shadows & Glows */
-    --glow-purple: rgba(139, 92, 246, 0.12);
-    --glow-strong: rgba(139, 92, 246, 0.22);
-    --glow-love: rgba(244, 114, 182, 0.18);
-
-    /* Gradients */
-    --gradient-card: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(252, 250, 255, 0.95) 100%);
-
-    /* Tailwind Standard Mappings */
-    --background: var(--bg-primary);
-    --foreground: var(--text-primary);
-  }
 }
 
 @theme inline {
@@ -98,7 +68,7 @@ body {
 }
 
 /* =========================================================================
-   FIXED AMBIENT BACKGROUND & OVERLAY (Zero-Asset Pure CSS Glow)
+   FIXED AMBIENT BACKGROUND & OVERLAY (Warm light pastel glow)
    ========================================================================= */
 .bg-ambient-backdrop {
   position: fixed;
@@ -108,72 +78,106 @@ body {
   overflow: hidden;
 }
 
+.bg-dot-grid {
+  background-image: radial-gradient(rgba(255, 184, 48, 0.08) 1.5px, transparent 1.5px);
+  background-size: 28px 28px;
+}
+
 .bg-ambient-image {
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(ellipse 60% 50% at 20% 15%, rgba(139, 92, 246, 0.22) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 40% at 80% 20%, rgba(244, 114, 182, 0.15) 0%, transparent 70%),
-    radial-gradient(ellipse 70% 60% at 50% 60%, rgba(99, 102, 241, 0.15) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 50% at 85% 85%, rgba(168, 85, 247, 0.18) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 45% at 15% 85%, rgba(192, 132, 252, 0.12) 0%, transparent 70%);
-  filter: blur(48px);
-  opacity: 0.85;
+    radial-gradient(ellipse 60% 50% at 20% 15%, rgba(255, 184, 48, 0.10) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 20%, rgba(255, 107, 138, 0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 60% at 50% 60%, rgba(180, 122, 255, 0.07) 0%, transparent 70%);
+  opacity: 0.7;
 }
 
 .bg-ambient-overlay {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 65%),
-              linear-gradient(180deg, rgba(8, 8, 22, 0.65) 0%, rgba(15, 11, 36, 0.85) 50%, #080816 100%);
-}
-
-@media (prefers-color-scheme: light) {
-  .bg-ambient-image {
-    background-image:
-      radial-gradient(ellipse 60% 50% at 20% 15%, rgba(139, 92, 246, 0.14) 0%, transparent 70%),
-      radial-gradient(ellipse 50% 40% at 80% 20%, rgba(244, 114, 182, 0.10) 0%, transparent 70%),
-      radial-gradient(ellipse 70% 60% at 50% 60%, rgba(99, 102, 241, 0.10) 0%, transparent 70%),
-      radial-gradient(ellipse 50% 50% at 85% 85%, rgba(168, 85, 247, 0.12) 0%, transparent 70%),
-      radial-gradient(ellipse 60% 45% at 15% 85%, rgba(192, 132, 252, 0.08) 0%, transparent 70%);
-    opacity: 0.7;
-  }
-  .bg-ambient-overlay {
-    background: radial-gradient(circle at 50% 0%, rgba(168, 85, 247, 0.10) 0%, transparent 65%),
-                linear-gradient(180deg, rgba(248, 247, 255, 0.75) 0%, rgba(241, 237, 255, 0.88) 50%, #F8F7FF 100%);
-  }
+  background: radial-gradient(circle at 50% 0%, rgba(255, 184, 48, 0.06) 0%, transparent 65%),
+              linear-gradient(180deg, rgba(255, 251, 245, 0.75) 0%, rgba(255, 245, 235, 0.88) 50%, #FFFBF5 100%);
 }
 
 /* =========================================================================
-   CUSTOM DESIGN SYSTEM UTILITIES
+   TACTILE 3D PUSH BUTTONS & NEO-POP UTILITIES
    ========================================================================= */
-.btn-primary-gradient {
-  background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+.btn-tactile-lemon {
+  background-color: #FFB830;
+  color: #2D1B0E;
+  border: 2px solid #2D1B0E;
+  box-shadow: 0 5px 0 #2D1B0E;
+  transform: translateY(0);
+  transition: all 0.08s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-tactile-lemon:hover {
+  background-color: #FFC959;
+}
+.btn-tactile-lemon:active {
+  transform: translateY(5px);
+  box-shadow: 0 0px 0 #2D1B0E;
 }
 
-.btn-love-gradient {
-  background: linear-gradient(135deg, #F472B6 0%, #A855F7 100%);
+.btn-tactile-violet {
+  background-color: #B47AFF;
+  color: #FFFFFF;
+  border: 2px solid #2D1B0E;
+  box-shadow: 0 5px 0 #2D1B0E;
+  transform: translateY(0);
+  transition: all 0.08s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-tactile-violet:hover {
+  background-color: #C396FF;
+}
+.btn-tactile-violet:active {
+  transform: translateY(5px);
+  box-shadow: 0 0px 0 #2D1B0E;
 }
 
-.btn-premium-gradient {
-  background: linear-gradient(135deg, #C084FC 0%, #4F46E5 100%);
+.btn-tactile-coral {
+  background-color: #FF6B8A;
+  color: #FFFFFF;
+  border: 2px solid #2D1B0E;
+  box-shadow: 0 5px 0 #2D1B0E;
+  transform: translateY(0);
+  transition: all 0.08s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-tactile-coral:hover {
+  background-color: #FF8BA4;
+}
+.btn-tactile-coral:active {
+  transform: translateY(5px);
+  box-shadow: 0 0px 0 #2D1B0E;
 }
 
-.glow-purple {
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.22);
+.btn-tactile-ghost {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border: 2px solid var(--card-border-active);
+  box-shadow: 0 4px 0 var(--card-border-active);
+  transform: translateY(0);
+  transition: all 0.08s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-.glow-purple-lg {
-  box-shadow: 0 0 35px rgba(139, 92, 246, 0.35);
+.btn-tactile-ghost:hover {
+  background-color: var(--bg-secondary);
 }
-
-.glow-love {
-  box-shadow: 0 0 24px rgba(244, 114, 182, 0.25);
+.btn-tactile-ghost:active {
+  transform: translateY(4px);
+  box-shadow: 0 0px 0 var(--card-border-active);
 }
 
 .card-surface {
   background: var(--gradient-card);
-  border: 1px solid var(--card-border);
+  border: 2px solid var(--card-border);
+  box-shadow: var(--shadow-tactile);
+}
+
+.sticker-tilt-left {
+  transform: rotate(-2.5deg);
+}
+.sticker-tilt-right {
+  transform: rotate(2.5deg);
 }
 
 /* Hide scrollbar for tabs */

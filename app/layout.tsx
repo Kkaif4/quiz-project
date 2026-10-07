@@ -96,8 +96,8 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className="min-h-full flex flex-col relative text-[var(--text-primary)]">
-        {/* Fixed Non-Scrolling Branded Background with Overlay */}
+      <body className="min-h-full flex flex-col relative text-[var(--text-primary)] bg-[var(--bg-primary)]">
+        {/* Fixed Non-Scrolling Warm Pastel Ambient Background */}
         <div aria-hidden="true" className="bg-ambient-backdrop">
           <div className="bg-ambient-image" />
           <div className="bg-ambient-overlay" />

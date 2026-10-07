@@ -3,6 +3,8 @@
 import React from "react";
 import { Trash2, Plus, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 
 export interface QuestionEditorData {
   id: string;
@@ -45,7 +47,7 @@ export function QuestionEditor({
 
   const handleOptionTextChange = (optId: string, text: string) => {
     const updatedOptions = question.options.map((opt) =>
-      opt.id === optId ? { ...opt, text: text.slice(0, 100) } : opt,
+      opt.id === optId ? { ...opt, text: text.slice(0, 100) } : opt
     );
     onUpdateQuestion({
       ...question,
@@ -85,14 +87,14 @@ export function QuestionEditor({
   };
 
   return (
-    <div className="card-surface rounded-3xl p-5 sm:p-7 shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all">
+    <div className="card-surface rounded-3xl p-5 sm:p-7 space-y-5">
       {/* Question Header */}
-      <div className="flex items-center justify-between gap-3 mb-4">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-violet-500/20 border border-violet-500/40 text-violet-300 font-extrabold text-xs">
+          <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-[#FFB830] text-[#2D1B0E] font-black text-sm shadow-[0_2px_0_#E09800]">
             {index + 1}
           </span>
-          <span className="text-xs font-bold tracking-wider text-[var(--text-muted)] uppercase">
+          <span className="text-xs font-black tracking-wider text-[var(--text-muted)] uppercase">
             Question {index + 1} of {totalQuestions}
           </span>
         </div>
@@ -101,128 +103,127 @@ export function QuestionEditor({
           <button
             type="button"
             onClick={onDeleteQuestion}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/15 rounded-xl transition-all cursor-pointer active:scale-95"
-            title="Delete this question"
+            className="text-[var(--text-muted)] hover:text-rose-400 p-1.5 rounded-xl hover:bg-rose-500/10 active:scale-95 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
           >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Delete Question</span>
+            <Trash2 className="w-4 h-4" />
+            <span className="hidden sm:inline">Delete</span>
           </button>
         ) : (
-          <span className="text-xs text-[var(--text-muted)]">Min 3 questions</span>
+          <Badge variant="slate">Min 3 questions</Badge>
         )}
       </div>
 
-      {/* Question Input */}
-      <div className="mb-5">
-        <label
-          htmlFor={`question-${question.id}-text`}
-          className="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2"
-        >
-          Prompt / Question Text
+      {/* Question Text Input */}
+      <div className="space-y-1.5">
+        <label className="block text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
+          Question Text
         </label>
         <textarea
-          id={`question-${question.id}-text`}
-          rows={2}
           value={question.text}
           onChange={(e) => handleTextChange(e.target.value)}
-          placeholder="e.g. What is my go-to comfort food on a Friday night?"
-          maxLength={300}
-          className="w-full px-4 py-3 rounded-2xl bg-[var(--input-bg)] border border-[var(--input-border)] focus:border-violet-500 focus:ring-2 focus:ring-violet-500/25 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] font-semibold text-base resize-none transition-all outline-none"
+          placeholder="e.g. What is my biggest guilty pleasure snack?"
+          rows={2}
+          className="w-full p-4 rounded-2xl bg-[var(--input-bg)] border-2 border-[var(--input-border)] focus:border-[#FFB830] focus:ring-4 focus:ring-[#FFB830]/20 text-[var(--text-primary)] font-bold text-base placeholder:text-[var(--text-muted)] outline-none transition-all resize-none"
         />
-        <div className="flex justify-end mt-1">
-          <span className="text-[11px] text-[var(--text-muted)] font-medium">
-            {question.text.length} / 300
+      </div>
+
+      {/* Options Configuration */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-black uppercase tracking-wider text-[var(--text-secondary)]">
+            Answer Choices (Tap checkmark to set correct answer)
+          </label>
+          <span className="text-[11px] font-bold text-[#E67700]">
+            🔒 Kept secret until friend submits
           </span>
         </div>
-      </div>
 
-      {/* Options List */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider px-1">
-          <span>Options (2–6)</span>
-          <span className="text-violet-400">Mark Correct Secret Answer</span>
-        </div>
+        <div className="space-y-2.5">
+          {question.options.map((opt, optIdx) => {
+            const isCorrect = question.correctOptionId === opt.id;
+            const letter = OPTION_LETTERS[optIdx] || `${optIdx + 1}`;
 
-        {question.options.map((opt, optIndex) => {
-          const isCorrect = opt.id === question.correctOptionId;
-          const letter = OPTION_LETTERS[optIndex] || `${optIndex + 1}`;
-
-          return (
-            <div
-              key={opt.id}
-              className={cn(
-                "flex items-center gap-2.5 p-2 rounded-2xl border transition-all min-h-[56px]",
-                isCorrect
-                  ? "border-violet-500/70 bg-violet-500/10 shadow-[0_0_15px_rgba(139,92,246,0.18)]"
-                  : "border-[var(--card-border)] bg-[var(--card-bg)] hover:border-violet-500/40",
-              )}
-            >
-              {/* Option Letter Badge (Brand Pill) */}
+            return (
               <div
+                key={opt.id}
                 className={cn(
-                  "w-9 h-9 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 transition-colors",
+                  "p-2 sm:p-3 rounded-2xl border-2 transition-all flex items-center gap-1.5 sm:gap-2.5",
                   isCorrect
-                    ? "bg-violet-600 text-white shadow-xs shadow-violet-600/30"
-                    : "bg-violet-500/15 border border-violet-500/20 text-violet-300",
+                    ? "border-[#FFB830] bg-[#FFB830]/10 shadow-[0_2px_0_#E09800]"
+                    : "border-[var(--card-border)] bg-[var(--card-bg)]"
                 )}
               >
-                {letter}
-              </div>
+                {/* Letter Indicator */}
+                <span
+                  className={cn(
+                    "w-8 h-8 rounded-xl font-black text-xs flex items-center justify-center shrink-0",
+                    isCorrect
+                      ? "bg-[#FFB830] text-[#2D1B0E]"
+                      : "bg-[var(--bg-secondary)] text-[var(--text-muted)] border border-[var(--card-border)]"
+                  )}
+                >
+                  {letter}
+                </span>
 
-              {/* Option Text Input */}
-              <input
-                type="text"
-                value={opt.text}
-                onChange={(e) => handleOptionTextChange(opt.id, e.target.value)}
-                placeholder={`Option ${letter}...`}
-                maxLength={100}
-                className="flex-1 min-w-0 bg-transparent text-sm sm:text-base font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none px-2 py-1.5"
-              />
+                {/* Option Text Input */}
+                <input
+                  type="text"
+                  value={opt.text}
+                  onChange={(e) => handleOptionTextChange(opt.id, e.target.value)}
+                  placeholder={`Option ${letter} text...`}
+                  className="flex-1 min-w-0 bg-transparent text-[var(--text-primary)] font-bold text-sm sm:text-base placeholder:text-[var(--text-muted)] outline-none"
+                />
 
-              {/* Mark as Correct Button (Radio behavior with Purple Glow) */}
-              <button
-                type="button"
-                onClick={() => handleSetCorrectOption(opt.id)}
-                aria-label={`Mark Option ${letter} as correct`}
-                className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-95 cursor-pointer",
-                  isCorrect
-                    ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-600/30 ring-2 ring-violet-400/50"
-                    : "border-2 border-[var(--input-border)] hover:border-violet-500/60 text-transparent",
-                )}
-              >
-                <Check className="w-4 h-4 stroke-[3]" />
-              </button>
-
-              {/* Remove Option Button */}
-              {canRemoveOption && (
+                {/* Mark as Correct Answer Button */}
                 <button
                   type="button"
-                  onClick={() => handleRemoveOption(opt.id)}
-                  aria-label={`Remove Option ${letter}`}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-[var(--text-muted)] hover:text-rose-400 hover:bg-rose-500/15 transition-colors shrink-0 cursor-pointer active:scale-95"
+                  onClick={() => handleSetCorrectOption(opt.id)}
+                  title={isCorrect ? "Correct Answer" : "Set as Correct"}
+                  className={cn(
+                    "px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all select-none shrink-0",
+                    isCorrect
+                      ? "bg-[#36D399] text-white shadow-xs"
+                      : "bg-[var(--bg-secondary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--card-border)]"
+                  )}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Check
+                    className={cn(
+                      "w-4 h-4 sm:w-3.5 sm:h-3.5 stroke-[3]",
+                      isCorrect ? "text-white" : "text-[var(--text-muted)]"
+                    )}
+                  />
+                  <span className="hidden sm:inline">{isCorrect ? "Correct Answer" : "Set Correct"}</span>
                 </button>
-              )}
-            </div>
-          );
-        })}
-      </div>
 
-      {/* Add Option Trigger */}
-      {canAddOption && (
-        <div className="mt-3.5 pt-2">
-          <button
-            type="button"
-            onClick={handleAddOption}
-            className="min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-violet-300 hover:text-violet-200 bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/25 transition-all cursor-pointer active:scale-98"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Add Option ({question.options.length}/6)</span>
-          </button>
+                {/* Delete Option */}
+                {canRemoveOption && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveOption(opt.id)}
+                    className="p-2 text-[var(--text-muted)] hover:text-rose-400 rounded-lg transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
-      )}
+
+        {/* Add Option Button */}
+        {canAddOption && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleAddOption}
+            className="w-full border-dashed"
+          >
+            <Plus className="w-4 h-4 text-[#FFB830]" />
+            <span>Add Option ({question.options.length}/6)</span>
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

@@ -15,6 +15,8 @@ import {
 import type { IUserQuizSummary } from "@/types/quiz";
 import { formatRelativeTime } from "@/lib/utils";
 import { getBrowserFingerprint } from "@/lib/fingerprint";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 
 export interface MyQuizzesSectionProps {
   serverQuizzes: IUserQuizSummary[];
@@ -25,7 +27,7 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
   const [userName, setUserName] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  // Sync client-side localStorage tokens and browser blueprint with server
+  // Sync client-side localStorage tokens and browser footprint with server
   useEffect(() => {
     let isMounted = true;
 
@@ -54,7 +56,6 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
               ) {
                 const newQuizzes: IUserQuizSummary[] = data.data.quizzes;
 
-                // Sync newly discovered ownerTokens into client localStorage
                 try {
                   if (window.localStorage) {
                     const raw = localStorage.getItem("quiz_owner_tokens");
@@ -78,7 +79,7 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
                     if (tokensUpdated) {
                       localStorage.setItem(
                         "quiz_owner_tokens",
-                        JSON.stringify(storedTokens.slice(0, 50)),
+                        JSON.stringify(storedTokens.slice(0, 50))
                       );
                     }
                   }
@@ -86,7 +87,6 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
                   console.warn("Could not sync tokens to localStorage:", storageErr);
                 }
 
-                // TASK-1003: Safe Deduplication & Merging (ownerToken never overwritten by empty string)
                 setQuizzes((prev) => {
                   const quizMap = new Map<string, IUserQuizSummary>();
                   for (const q of prev) {
@@ -107,7 +107,7 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
                   return Array.from(quizMap.values()).sort(
                     (a, b) =>
                       new Date(b.createdAt).getTime() -
-                      new Date(a.createdAt).getTime(),
+                      new Date(a.createdAt).getTime()
                   );
                 });
               }
@@ -124,27 +124,26 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
         const localTokens: string[] = raw ? JSON.parse(raw) : [];
 
         if (!Array.isArray(localTokens) || localTokens.length === 0) {
-          // If localStorage is empty but server has quizzes, backfill localStorage
           if (serverQuizzes.length > 0) {
             const serverTokens = serverQuizzes
               .map((q) => q.ownerToken)
               .filter((t): t is string => typeof t === "string" && t.length > 0);
             localStorage.setItem(
               "quiz_owner_tokens",
-              JSON.stringify(serverTokens),
+              JSON.stringify(serverTokens)
             );
           }
           return;
         }
 
-        // Check if localStorage contains tokens unknown to the server-rendered list
         const knownTokens = new Set(
-          quizzes.map((q) => q.ownerToken).filter(Boolean),
+          quizzes.map((q) => q.ownerToken).filter(Boolean)
         );
-        const missingTokens = localTokens.filter((token) => !knownTokens.has(token));
+        const missingTokens = localTokens.filter(
+          (token) => !knownTokens.has(token)
+        );
 
         if (missingTokens.length > 0) {
-          // Fetch missing quizzes from multi-quiz hub endpoint
           fetch("/api/quizzes/my-quizzes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -155,7 +154,6 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
               if (!isMounted) return;
               if (data.success && Array.isArray(data.data)) {
                 const fetchedQuizzes: IUserQuizSummary[] = data.data;
-                // Deduplicate and merge by quiz code
                 setQuizzes((prev) => {
                   const quizMap = new Map<string, IUserQuizSummary>();
                   for (const q of prev) {
@@ -176,7 +174,7 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
                   return Array.from(quizMap.values()).sort(
                     (a, b) =>
                       new Date(b.createdAt).getTime() -
-                      new Date(a.createdAt).getTime(),
+                      new Date(a.createdAt).getTime()
                   );
                 });
               }
@@ -219,28 +217,26 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
       {/* Section Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-2xl bg-violet-500/15 border border-violet-500/30 flex items-center justify-center text-violet-400 shadow-xs">
-            {userName ? (
-              <UserIcon className="w-4 h-4 text-violet-300" />
-            ) : (
-              <Sparkles className="w-4 h-4 text-violet-400" />
-            )}
+          <div className="w-10 h-10 rounded-2xl bg-[#FFB830]/15 border-2 border-[#FFB830]/30 flex items-center justify-center text-xl shrink-0">
+            {userName ? "👑" : "✨"}
           </div>
           <div>
             <h2 className="text-lg sm:text-xl font-black text-[var(--text-primary)] tracking-tight">
-              {userName ? `Welcome back, ${userName}!` : "Your Active Quizzes"}
+              {userName ? `Welcome back, ${userName}!` : "Your Active Squad Quizzes"}
             </h2>
-            <p className="text-xs font-medium text-[var(--text-secondary)]">
+            <p className="text-xs font-semibold text-[var(--text-secondary)]">
               {userName
-                ? "Quizzes linked to this device & browser footprint"
-                : "Quizzes you created on this device"}
+                ? "Quizzes linked to your device blueprint"
+                : "Manage rankings and inspect friend responses"}
             </p>
           </div>
         </div>
 
-        <span className="text-xs font-bold text-violet-300 px-3 py-1 rounded-full bg-violet-500/15 border border-violet-500/25">
-          {quizzes.length} {quizzes.length === 1 ? "quiz" : "quizzes"}
-        </span>
+        <Badge variant="lemon" tilt="right">
+          <span>
+            {quizzes.length} {quizzes.length === 1 ? "quiz" : "quizzes"}
+          </span>
+        </Badge>
       </div>
 
       {/* Quizzes Grid */}
@@ -252,100 +248,92 @@ export function MyQuizzesSection({ serverQuizzes }: MyQuizzesSectionProps) {
           return (
             <div
               key={quiz.code}
-              className="card-surface rounded-3xl p-5 sm:p-6 flex flex-col justify-between space-y-4 hover:border-violet-500/40 transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
+              className="card-surface rounded-3xl p-5 sm:p-6 space-y-4 flex flex-col justify-between"
             >
-              {/* Top: Status & Title */}
-              <div className="space-y-2">
+              <div className="space-y-3">
+                {/* Top Status Badges */}
                 <div className="flex items-center justify-between gap-2">
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                      isLive
-                        ? "bg-emerald-500/15 border-emerald-500/35 text-emerald-400"
-                        : "bg-amber-500/15 border-amber-500/35 text-amber-400"
-                    }`}
-                  >
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        isLive ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
-                      }`}
-                    />
-                    <span>{isLive ? "Live" : "Paused"}</span>
-                  </span>
+                  <Badge variant={isLive ? "mint" : "slate"}>
+                    <span className={`w-2 h-2 rounded-full ${isLive ? "bg-[#10B981] animate-pulse" : "bg-slate-400"}`} />
+                    <span>{isLive ? "Active Live" : "Closed"}</span>
+                  </Badge>
 
-                  <span className="text-xs font-medium text-[var(--text-muted)]">
+                  <span className="text-[11px] font-bold text-[var(--text-muted)]">
                     {formatRelativeTime(quiz.createdAt)}
                   </span>
                 </div>
 
-                <h3 className="text-base sm:text-lg font-black text-[var(--text-primary)] leading-snug line-clamp-2">
-                  {quiz.title}
-                </h3>
-              </div>
-
-              {/* Middle: Stats Badges */}
-              <div className="flex items-center gap-4 py-2.5 border-y border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-secondary)]">
-                <div className="flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-violet-400" />
-                  <span>
-                    <strong className="text-[var(--text-primary)] font-bold">
-                      {quiz.stats.attempts}
-                    </strong>{" "}
-                    responses
-                  </span>
+                {/* Quiz Title */}
+                <div>
+                  <h3 className="font-black text-lg text-[var(--text-primary)] tracking-tight line-clamp-1">
+                    {quiz.title}
+                  </h3>
                 </div>
 
-                <div className="flex items-center gap-1.5">
-                  <Eye className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>
-                    <strong className="text-[var(--text-primary)] font-bold">
-                      {quiz.stats.views}
-                    </strong>{" "}
-                    views
-                  </span>
+                {/* Stats Row */}
+                <div className="grid grid-cols-3 gap-2 py-2 px-3 rounded-2xl bg-[var(--card-bg)] border-2 border-[var(--card-border)] text-center text-xs font-bold">
+                  <div>
+                    <span className="block text-[var(--text-muted)] text-[10px] uppercase">
+                      Attempts
+                    </span>
+                    <span className="font-black text-[#FFB830] text-sm">
+                      {quiz.stats?.attempts || 0}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="block text-[var(--text-muted)] text-[10px] uppercase">
+                      Views
+                    </span>
+                    <span className="font-black text-[var(--text-primary)] text-sm">
+                      {quiz.stats?.views || 0}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="block text-[var(--text-muted)] text-[10px] uppercase">
+                      Shares
+                    </span>
+                    <span className="font-black text-[#B47AFF] text-sm">
+                      {quiz.stats?.shares || 0}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Bottom: Action Buttons (56px min touch target) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 pt-2 border-t-2 border-[var(--border-subtle)]">
                 {quiz.ownerToken ? (
                   <Link
                     href={`/manage/${quiz.ownerToken}`}
-                    className="min-h-[56px] py-4 px-4 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:brightness-110 active:scale-[0.98] transition-all font-bold text-xs sm:text-sm shadow-md shadow-violet-600/25 flex items-center justify-center gap-2 cursor-pointer glow-purple"
+                    className="flex-1 block"
                   >
-                    <KeyRound className="w-4 h-4 text-white/90" />
-                    <span>Manage / Leaderboard</span>
-                    <ChevronRight className="w-4 h-4 text-white/70 ml-auto sm:ml-0" />
+                    <Button variant="lemon" size="md" fullWidth>
+                      <KeyRound className="w-4 h-4 text-[#2D1B0E]" />
+                      <span>Leaderboard</span>
+                      <ChevronRight className="w-4 h-4 text-[#2D1B0E]" />
+                    </Button>
                   </Link>
                 ) : (
-                  <Link
-                    href={`/q/${quiz.code}`}
-                    className="min-h-[56px] py-4 px-4 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:brightness-110 active:scale-[0.98] transition-all font-bold text-xs sm:text-sm shadow-md shadow-violet-600/25 flex items-center justify-center gap-2 cursor-pointer glow-purple"
-                  >
-                    <Eye className="w-4 h-4 text-white/90" />
-                    <span>View Quiz</span>
-                    <ChevronRight className="w-4 h-4 text-white/70 ml-auto sm:ml-0" />
+                  <Link href={`/q/${quiz.code}`} className="flex-1 block">
+                    <Button variant="ghost" size="md" fullWidth>
+                      <Eye className="w-4 h-4 text-[#B47AFF]" />
+                      <span>View Quiz</span>
+                    </Button>
                   </Link>
                 )}
 
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="md"
                   onClick={() => handleCopyLink(quiz.code)}
-                  className="min-h-[56px] py-4 px-4 rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] hover:border-violet-500/50 hover:bg-violet-500/10 active:scale-[0.98] transition-all font-semibold text-xs sm:text-sm text-[var(--text-primary)] flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                  className="px-4 shrink-0"
                 >
                   {isCopied ? (
-                    <>
-                      <Check className="w-4 h-4 text-emerald-400" />
-                      <span className="text-emerald-400 font-bold">
-                        Link Copied!
-                      </span>
-                    </>
+                    <Check className="w-4 h-4 text-[#1EAA78]" />
                   ) : (
-                    <>
-                      <Share2 className="w-4 h-4 text-[var(--text-muted)]" />
-                      <span>Share Link</span>
-                    </>
+                    <Share2 className="w-4 h-4 text-[#FFB830]" />
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           );

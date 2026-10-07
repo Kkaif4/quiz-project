@@ -18,11 +18,16 @@ import {
   Share2,
   Check,
   Eye,
+  Zap,
 } from "lucide-react";
 import type { IQuizPublic } from "@/types/quiz";
 import { cn } from "@/lib/utils";
 import { getBrowserFingerprint } from "@/lib/fingerprint";
 import { useRecaptchaV3 } from "@/hooks/useRecaptchaV3";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Badge } from "@/components/ui/Badge";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 
 interface QuizPlayerProps {
   quiz: IQuizPublic;
@@ -51,18 +56,18 @@ export function QuizPlayer({
 
   // Owner recognition state
   const [ownerToken, setOwnerToken] = useState<string | null>(
-    matchedOwnerToken || null,
+    matchedOwnerToken || null
   );
   const [isOwnerDetected, setIsOwnerDetected] = useState<boolean>(
-    Boolean(matchedOwnerToken),
+    Boolean(matchedOwnerToken)
   );
   const [isPreviewMode, setIsPreviewMode] = useState<boolean>(isPreview);
   const [copiedShareLink, setCopiedShareLink] = useState(false);
 
   // Stage: "nickname" | "playing" | "submitting" | "error"
-  const [stage, setStage] = useState<"nickname" | "playing" | "submitting" | "error">(
-    "nickname",
-  );
+  const [stage, setStage] = useState<
+    "nickname" | "playing" | "submitting" | "error"
+  >("nickname");
 
   // Participant details
   const [nickname, setNickname] = useState("");
@@ -70,9 +75,9 @@ export function QuizPlayer({
 
   // Quiz progression state
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Array<{ questionId: string; optionId: string }>>(
-    [],
-  );
+  const [answers, setAnswers] = useState<
+    Array<{ questionId: string; optionId: string }>
+  >([]);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const startTimeRef = React.useRef<number>(0);
 
@@ -93,12 +98,8 @@ export function QuizPlayer({
 
   const totalQuestions = quiz.questions.length;
   const currentQuestion = quiz.questions[currentQuestionIndex];
-  const progressPercent =
-    totalQuestions > 0
-      ? Math.round((currentQuestionIndex / totalQuestions) * 100)
-      : 0;
 
-  // TASK-1005: Client-Side Owner Shield
+  // Client-Side Owner Shield Check
   useEffect(() => {
     let isMounted = true;
 
@@ -132,13 +133,12 @@ export function QuizPlayer({
             setOwnerToken(data.data.ownerToken);
             setIsOwnerDetected(true);
 
-            // Sync freshly discovered ownerToken to localStorage if missing
             try {
               if (!localTokens.includes(data.data.ownerToken)) {
                 localTokens.unshift(data.data.ownerToken);
                 localStorage.setItem(
                   "quiz_owner_tokens",
-                  JSON.stringify(localTokens.slice(0, 50)),
+                  JSON.stringify(localTokens.slice(0, 50))
                 );
               }
             } catch (storageErr) {
@@ -171,12 +171,13 @@ export function QuizPlayer({
     }
   };
 
-  // Handle Nickname validation and starting quiz
   const handleStartQuiz = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = nickname.trim();
     if (!trimmed) {
-      setNicknameError("Please enter your name or nickname to join the leaderboard.");
+      setNicknameError(
+        "Please enter your nickname so your squad recognizes you!"
+      );
       return;
     }
     if (trimmed.length > 30) {
@@ -188,14 +189,13 @@ export function QuizPlayer({
     setStage("playing");
   };
 
-  // Submit attempt to server
   const handleSubmitQuiz = React.useCallback(
     async (finalAnswers: Array<{ questionId: string; optionId: string }>) => {
       setStage("submitting");
       setSubmitError(null);
 
       const elapsedSeconds = Math.round(
-        (Date.now() - startTimeRef.current) / 1000,
+        (Date.now() - startTimeRef.current) / 1000
       );
 
       try {
@@ -221,13 +221,13 @@ export function QuizPlayer({
           if (response.status === 403) {
             throw new Error(
               data.error ||
-                "You have reached the maximum number of attempts allowed for this quiz.",
+                "You have reached the maximum number of attempts allowed for this quiz."
             );
           }
           if (response.status === 429) {
             throw new Error(
               data.error ||
-                "Too many attempts from this connection. Please wait a few minutes.",
+                "Whoa speedster! 🏎️ Please wait a few minutes before trying again."
             );
           }
           throw new Error(data.error || "Failed to submit quiz attempt.");
@@ -245,10 +245,9 @@ export function QuizPlayer({
         setStage("error");
       }
     },
-    [executeRecaptcha, honeypot, nickname, quiz.code, router],
+    [executeRecaptcha, honeypot, nickname, quiz.code, router]
   );
 
-  // Handle Option selection with 250ms tactile feedback auto-advance
   const handleSelectOption = (optionId: string) => {
     if (selectedOptionId !== null || stage !== "playing") return;
 
@@ -268,10 +267,9 @@ export function QuizPlayer({
       } else {
         handleSubmitQuiz(updatedAnswers);
       }
-    }, 250);
+    }, 220);
   };
 
-  // Handle Report Submission
   const handleSubmitReport = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmittingReport(true);
@@ -306,7 +304,8 @@ export function QuizPlayer({
         setReportDescription("");
       }, 1500);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Error submitting report.";
+      const msg =
+        err instanceof Error ? err.message : "Error submitting report.";
       setReportError(msg);
     } finally {
       setIsSubmittingReport(false);
@@ -329,66 +328,66 @@ export function QuizPlayer({
 
       <div className="w-full">
         {/* ===================================================================
-            TASK-1005: OWNER WELCOME SCREEN (When owner detected & not in preview)
+            OWNER WELCOME SCREEN (When owner detected & not in preview)
             =================================================================== */}
         {isOwnerDetected && !isPreviewMode ? (
-          <div className="card-surface rounded-3xl p-6 sm:p-8 mt-4 animate-in fade-in zoom-in-95 duration-200 shadow-[0_12px_40px_rgb(0,0,0,0.2)] text-center space-y-6">
-            {/* Header Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-500/15 border border-violet-500/30 text-violet-300 text-xs font-bold shadow-xs">
-              <Crown className="w-4 h-4 text-amber-400" />
-              <span>Owner Detected</span>
+          <div className="card-surface rounded-3xl p-6 sm:p-8 mt-4 text-center space-y-6 border-2 border-[var(--card-border)]">
+            <div className="flex justify-center">
+              <Badge variant="lemon" tilt="left">
+                <Crown className="w-4 h-4 text-amber-500" />
+                <span>Quiz Creator Detected</span>
+              </Badge>
             </div>
 
-            {/* Title & Subtitle */}
             <div className="space-y-2">
               <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight leading-tight">
-                You Created This Quiz!
+                You Created This Quiz! 💖
               </h1>
               <p className="text-[var(--text-secondary)] text-sm sm:text-base font-medium max-w-md mx-auto leading-relaxed">
-                You don&apos;t need to take your own quiz. Your friends&apos; live rankings, answers, and scores are in your dashboard.
+                You don&apos;t need to take your own quiz. Your squad&apos;s live rankings, answers, and scores are waiting in your dashboard.
               </p>
             </div>
 
-            {/* Action Buttons (56px minimum touch target height) */}
             <div className="space-y-3 pt-2">
               {ownerToken && (
-                <Link
-                  href={`/manage/${ownerToken}`}
-                  className="w-full min-h-[56px] py-4 px-6 rounded-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white font-black text-base shadow-xl shadow-violet-600/30 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer glow-purple"
-                >
-                  <KeyRound className="w-5 h-5 text-white/90" />
-                  <span>Go to Owner Dashboard &amp; Leaderboard</span>
-                  <ArrowRight className="w-5 h-5 text-white/90" />
+                <Link href={`/manage/${ownerToken}`} className="block">
+                  <Button variant="lemon" size="lg" fullWidth>
+                    <KeyRound className="w-5 h-5 text-[#2D1B0E]" />
+                    <span>Open Squad Leaderboard</span>
+                    <ArrowRight className="w-5 h-5 text-[#2D1B0E]" />
+                  </Button>
                 </Link>
               )}
 
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="lg"
+                fullWidth
                 onClick={handleCopyShareLink}
-                className="w-full min-h-[56px] py-4 px-6 rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] hover:border-violet-500/50 hover:bg-violet-500/10 active:scale-[0.98] transition-all font-bold text-sm sm:text-base text-[var(--text-primary)] flex items-center justify-center gap-2 cursor-pointer shadow-xs"
               >
                 {copiedShareLink ? (
                   <>
-                    <Check className="w-5 h-5 text-emerald-400" />
+                    <Check className="w-5 h-5 text-[#1EAA78]" />
                     <span className="text-emerald-400 font-bold">
-                      Share Link Copied!
+                      Share Link Copied! 💕
                     </span>
                   </>
                 ) : (
                   <>
-                    <Share2 className="w-5 h-5 text-violet-400" />
+                    <Share2 className="w-5 h-5 text-[#FFB830]" />
                     <span>Copy Share Link</span>
                   </>
                 )}
-              </button>
+              </Button>
 
               <button
                 type="button"
                 onClick={() => setIsPreviewMode(true)}
-                className="w-full py-3 px-4 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-3 px-4 rounded-xl text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <Eye className="w-4 h-4 text-violet-400" />
-                <span>Take Quiz in Preview Mode</span>
+                <Eye className="w-4 h-4 text-[#B47AFF]" />
+                <span>Play in Test Preview Mode</span>
               </button>
             </div>
           </div>
@@ -396,15 +395,15 @@ export function QuizPlayer({
           <>
             {/* Owner Preview Banner if playing in preview mode */}
             {isOwnerDetected && isPreviewMode && (
-              <div className="mb-4 p-3 rounded-2xl bg-violet-500/15 border border-violet-500/30 flex items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2 text-violet-200 font-medium">
-                  <Crown className="w-4 h-4 text-amber-400 shrink-0" />
+              <div className="mb-4 p-3 rounded-2xl bg-[#FFB830]/15 border-2 border-[#FFB830]/30 flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2 text-[#E67700] font-bold">
+                  <Crown className="w-4 h-4 text-[#FFB830] shrink-0" />
                   <span>Owner Preview Mode</span>
                 </div>
                 {ownerToken && (
                   <Link
                     href={`/manage/${ownerToken}`}
-                    className="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold transition-all flex items-center gap-1 shrink-0 active:scale-95"
+                    className="px-3 py-1.5 rounded-xl bg-[#FFB830] text-[#2D1B0E] font-black transition-all flex items-center gap-1 shrink-0 active:scale-95 shadow-[0_2px_0_#E09800]"
                   >
                     <span>Dashboard</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -417,111 +416,99 @@ export function QuizPlayer({
                 STAGE 1: NICKNAME ENTRY CARD
                 =================================================================== */}
             {stage === "nickname" && (
-              <div className="card-surface rounded-3xl p-6 sm:p-8 mt-4 animate-in fade-in zoom-in-95 duration-200 shadow-[0_12px_40px_rgb(0,0,0,0.2)]">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/15 border border-violet-500/30 text-violet-300 text-xs font-bold mb-4 shadow-xs">
-                  <Sparkles className="w-3.5 h-3.5 text-violet-400" />
-                  <span>Friendship Challenge</span>
+              <div className="card-surface rounded-3xl p-6 sm:p-8 mt-4 space-y-6">
+                <div className="flex items-center justify-between">
+                  <Badge variant="lemon" tilt="left">
+                    <Sparkles className="w-3.5 h-3.5 text-[#FFB830]" />
+                    <span>Friendship Challenge</span>
+                  </Badge>
+                  <span className="text-xs font-black text-[var(--text-muted)] uppercase tracking-wider">
+                    {totalQuestions} Questions ⚡
+                  </span>
                 </div>
 
-                <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight leading-tight">
-                  {quiz.title}
-                </h1>
+                <div className="space-y-2">
+                  <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight leading-tight">
+                    {quiz.title}
+                  </h1>
 
-                {quiz.description && (
-                  <p className="text-[var(--text-secondary)] text-sm sm:text-base font-medium mt-2 leading-relaxed">
-                    {quiz.description}
-                  </p>
-                )}
+                  {quiz.description && (
+                    <p className="text-[var(--text-secondary)] text-sm sm:text-base font-medium leading-relaxed">
+                      {quiz.description}
+                    </p>
+                  )}
+                </div>
 
-                <div className="flex items-center gap-3 my-6 py-3 px-4 rounded-2xl bg-violet-500/10 border border-violet-500/20 text-xs font-semibold text-violet-300">
-                  <div className="flex items-center gap-1.5">
-                    <HelpCircle className="w-4 h-4 text-violet-400" />
-                    <span>{totalQuestions} Questions</span>
+                <div className="p-4 rounded-2xl bg-[var(--card-bg)] border-2 border-[var(--card-border)] flex items-center justify-between text-xs sm:text-sm font-bold text-[var(--text-secondary)]">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">⏱️</span>
+                    <span>Takes ~45 seconds</span>
                   </div>
-                  <div className="w-1 h-1 rounded-full bg-violet-400/50" />
-                  <span>Instant Leaderboard</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🏆</span>
+                    <span>Live Leaderboard</span>
+                  </div>
                 </div>
 
                 <form onSubmit={handleStartQuiz} className="space-y-4">
                   <div>
                     <label
                       htmlFor="player-nickname-input"
-                      className="block text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2"
+                      className="block text-xs font-black uppercase tracking-wider text-[var(--text-secondary)] mb-2"
                     >
-                      Enter Your Nickname or Name
+                      Enter Your Nickname or IG Handle
                     </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-violet-400">
-                        <User className="w-5 h-5" />
-                      </div>
-                      <input
-                        id="player-nickname-input"
-                        type="text"
-                        value={nickname}
-                        onChange={(e) => {
-                          setNickname(e.target.value.slice(0, 30));
-                          setNicknameError(null);
-                        }}
-                        placeholder="e.g. Maya, Chris, Liam..."
-                        maxLength={30}
-                        autoFocus
-                        className="w-full min-h-[56px] pl-12 pr-4 py-4 rounded-2xl bg-[var(--input-bg)] border border-[var(--input-border)] focus:border-violet-500 focus:ring-2 focus:ring-violet-500/25 text-[var(--text-primary)] font-bold text-base placeholder:text-[var(--text-muted)] outline-none transition-all"
-                      />
-                    </div>
-                    {nicknameError && (
-                      <p className="text-xs font-semibold text-rose-400 mt-2 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5" />
-                        <span>{nicknameError}</span>
-                      </p>
-                    )}
+                    <Input
+                      id="player-nickname-input"
+                      value={nickname}
+                      onChange={(e) => {
+                        setNickname(e.target.value.slice(0, 30));
+                        setNicknameError(null);
+                      }}
+                      placeholder="e.g. Zack, Maya, The Bestie..."
+                      maxLength={30}
+                      autoFocus
+                      error={nicknameError}
+                      icon={<User className="w-5 h-5 text-[#FFB830]" />}
+                    />
                   </div>
 
-                  <button
-                    type="submit"
-                    className="w-full min-h-[56px] py-4 px-6 rounded-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white font-black text-base shadow-xl shadow-violet-600/30 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer glow-purple"
-                  >
-                    <span>Accept Challenge</span>
-                    <ArrowRight className="w-5 h-5 text-white/90" />
-                  </button>
+                  <Button type="submit" variant="lemon" size="lg" fullWidth>
+                    <span>Start Challenge ⚡</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </Button>
                 </form>
               </div>
             )}
 
             {/* ===================================================================
-                STAGE 2: QUESTION DECK (56px touch targets, letter badges, glow)
+                STAGE 2: QUESTION GAMEPLAY STACK
                 =================================================================== */}
             {stage === "playing" && currentQuestion && (
-              <div className="w-full mt-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
-                {/* Top Progress Indicator */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between text-xs font-bold text-[var(--text-secondary)] mb-2 px-1">
-                    <span className="uppercase tracking-wider">
-                      Question {currentQuestionIndex + 1} of {totalQuestions}
+              <div className="w-full mt-2 space-y-4">
+                {/* Top HUD Progress Bar */}
+                <ProgressBar
+                  current={currentQuestionIndex + 1}
+                  total={totalQuestions}
+                />
+
+                {/* Active Question Card */}
+                <div className="card-surface rounded-3xl p-6 sm:p-8 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="violet" tilt="right">
+                      <span>Question {currentQuestionIndex + 1}</span>
+                    </Badge>
+                    <span className="text-xs font-bold text-[var(--text-muted)]">
+                      Tap your answer 👇
                     </span>
-                    <span className="text-violet-400 font-bold">{progressPercent}% Complete</span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-violet-500/20 overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-300 ease-out rounded-full"
-                      style={{
-                        width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </div>
 
-                {/* Question Card */}
-                <div className="card-surface rounded-3xl p-6 sm:p-8 shadow-[0_12px_40px_rgb(0,0,0,0.18)]">
-                  <span className="text-[11px] font-black uppercase tracking-widest text-violet-300 bg-violet-500/15 border border-violet-500/30 px-3 py-1 rounded-full mb-3 inline-block">
-                    Question {currentQuestionIndex + 1}
-                  </span>
-
-                  <h2 className="text-xl sm:text-2xl font-black text-[var(--text-primary)] tracking-tight leading-snug mb-6">
+                  <h2 className="text-xl sm:text-2xl font-black text-[var(--text-primary)] tracking-tight leading-snug">
                     {currentQuestion.text}
                   </h2>
 
-                  {/* Options Deck (Minimum 56px touch target height) */}
-                  <div className="space-y-3">
+                  {/* 4 Chunky Tactile Option Cards */}
+                  <div className="space-y-3 pt-1">
                     {currentQuestion.options.map((option, optIdx) => {
                       const isSelected = selectedOptionId === option.id;
                       const letter = OPTION_LETTERS[optIdx] || `${optIdx + 1}`;
@@ -533,19 +520,19 @@ export function QuizPlayer({
                           onClick={() => handleSelectOption(option.id)}
                           disabled={selectedOptionId !== null}
                           className={cn(
-                            "w-full min-h-[56px] text-left px-5 py-4 rounded-2xl border transition-all flex items-center justify-between font-bold text-sm sm:text-base cursor-pointer active:scale-[0.99]",
+                            "w-full min-h-[60px] text-left px-5 py-4 rounded-2xl border-2 transition-all flex items-center justify-between font-bold text-base sm:text-lg cursor-pointer select-none",
                             isSelected
-                              ? "border-violet-500 bg-violet-600/20 text-violet-200 ring-2 ring-violet-500 shadow-md shadow-violet-500/20 glow-purple"
-                              : "border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--text-primary)] hover:border-violet-500/50 hover:bg-violet-500/10",
+                              ? "bg-[#FFB830] text-[#2D1B0E] border-[#E09800] shadow-[0_1px_0_#E09800] translate-y-[3px]"
+                              : "bg-[var(--card-bg)] text-[var(--text-primary)] border-[var(--card-border)] shadow-[var(--shadow-tactile)] hover:border-[#FFB830]/60 hover:bg-[#FFB830]/5 active:translate-y-[3px] active:shadow-none"
                           )}
                         >
                           <div className="flex items-center gap-3.5 pr-2">
                             <span
                               className={cn(
-                                "w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black shrink-0 transition-colors",
+                                "w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black shrink-0 transition-colors",
                                 isSelected
-                                  ? "bg-violet-600 text-white"
-                                  : "bg-violet-500/15 text-violet-300 border border-violet-500/30",
+                                  ? "bg-[#2D1B0E] text-[#FFB830]"
+                                  : "bg-[#FFB830]/15 text-[#E67700] border border-[#FFB830]/30"
                               )}
                             >
                               {letter}
@@ -553,10 +540,15 @@ export function QuizPlayer({
                             <span className="leading-snug">{option.text}</span>
                           </div>
 
-                          <div className="w-5 h-5 rounded-full border border-violet-500/40 flex items-center justify-center shrink-0">
-                            {isSelected && (
-                              <div className="w-2.5 h-2.5 rounded-full bg-violet-400" />
+                          <div
+                            className={cn(
+                              "w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                              isSelected
+                                ? "border-[#2D1B0E] bg-[#2D1B0E] text-[#FFB830]"
+                                : "border-[var(--card-border)]"
                             )}
+                          >
+                            {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                           </div>
                         </button>
                       );
@@ -567,56 +559,63 @@ export function QuizPlayer({
             )}
 
             {/* ===================================================================
-                STAGE 3: SUBMITTING / SCORING
+                STAGE 3: SUSPENSE SCORING LOADER
                 =================================================================== */}
             {stage === "submitting" && (
-              <div className="card-surface rounded-3xl p-8 mt-8 text-center animate-in fade-in zoom-in-95 duration-200 shadow-[0_12px_40px_rgb(0,0,0,0.18)]">
-                <div className="w-16 h-16 rounded-2xl bg-violet-500/15 border border-violet-500/30 text-violet-400 flex items-center justify-center mx-auto mb-4 shadow-xs glow-purple">
-                  <Loader2 className="w-8 h-8 animate-spin" />
+              <div className="card-surface rounded-3xl p-8 mt-8 text-center space-y-5 border-2 border-[var(--card-border)]">
+                <div className="w-20 h-20 rounded-3xl bg-[#FFB830]/15 border-2 border-[#FFB830]/30 text-[#FFB830] flex items-center justify-center mx-auto shadow-inner text-4xl animate-bounce">
+                  🍋
                 </div>
-                <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tight mb-2">
-                  Scoring Your Answers...
-                </h2>
-                <p className="text-sm font-medium text-[var(--text-secondary)] max-w-sm mx-auto">
-                  Comparing your choices with {quiz.title}. Hold tight for your
-                  friendship verdict!
-                </p>
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">
+                    Calculating Friendship IQ... 💫
+                  </h2>
+                  <p className="text-sm font-semibold text-[var(--text-secondary)] max-w-sm mx-auto">
+                    Comparing your answers with {quiz.title}. Hold tight for the squad verdict!
+                  </p>
+                </div>
+                <div className="flex justify-center pt-2">
+                  <Loader2 className="w-6 h-6 text-[#FFB830] animate-spin" />
+                </div>
               </div>
             )}
 
             {/* ===================================================================
-                STAGE 4: ERROR STATE
+                STAGE 4: ERROR / RETRY
                 =================================================================== */}
             {stage === "error" && (
-              <div className="card-surface rounded-3xl p-8 mt-8 text-center animate-in fade-in zoom-in-95 duration-200 shadow-[0_12px_40px_rgb(0,0,0,0.18)]">
-                <div className="w-16 h-16 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto mb-4">
-                  <AlertCircle className="w-8 h-8" />
+              <div className="card-surface rounded-3xl p-8 mt-8 text-center space-y-5 border-2 border-[var(--card-border)]">
+                <div className="w-16 h-16 rounded-2xl bg-[#FF6B8A]/15 border-2 border-[#FF6B8A]/30 text-[#E0456B] flex items-center justify-center mx-auto text-3xl">
+                  ⚠️
                 </div>
-                <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight mb-2">
-                  Submission Notice
-                </h2>
-                <p className="text-sm font-medium text-[var(--text-secondary)] max-w-md mx-auto mb-6">
-                  {submitError || "Something went wrong while scoring your quiz."}
-                </p>
-                <button
+                <div className="space-y-2">
+                  <h2 className="text-xl font-black text-[var(--text-primary)] tracking-tight">
+                    Submission Notice
+                  </h2>
+                  <p className="text-sm font-medium text-[var(--text-secondary)] max-w-md mx-auto">
+                    {submitError || "Something went wrong while scoring your quiz."}
+                  </p>
+                </div>
+                <Button
                   type="button"
+                  variant="violet"
+                  size="md"
                   onClick={() => {
                     setStage("nickname");
                     setCurrentQuestionIndex(0);
                     setAnswers([]);
                     setSubmitError(null);
                   }}
-                  className="min-h-[56px] py-3 px-8 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold text-sm hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer glow-purple"
                 >
                   Start Over
-                </button>
+                </Button>
               </div>
             )}
           </>
         )}
       </div>
 
-      {/* Discreet Footer with Report Option */}
+      {/* Discreet Footer with Safety Report Option */}
       <footer className="mt-8 mb-4 pt-4 border-t border-[var(--border-subtle)] flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-center sm:text-left">
           <span>LemonQuiz · Anonymous &amp; Safe</span>
@@ -653,14 +652,14 @@ export function QuizPlayer({
         </button>
       </footer>
 
-      {/* Report Modal */}
+      {/* Safety Report Modal */}
       {isReportOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="card-surface rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl space-y-4 border border-[var(--card-border)]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="card-surface rounded-3xl p-6 sm:p-7 max-w-md w-full space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-rose-400">
                 <ShieldAlert className="w-5 h-5" />
-                <h3 className="font-extrabold text-base text-[var(--text-primary)]">
+                <h3 className="font-black text-base text-[var(--text-primary)]">
                   Report This Quiz
                 </h3>
               </div>
@@ -676,17 +675,15 @@ export function QuizPlayer({
             {reportSuccess ? (
               <div className="py-6 text-center space-y-2">
                 <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
-                <p className="font-bold text-sm text-[var(--text-primary)]">
-                  Report Received
+                <p className="font-black text-sm text-[var(--text-primary)]">
+                  Report Received ✨
                 </p>
                 <p className="text-xs text-[var(--text-secondary)]">
-                  Thank you for keeping LemonQuiz safe. Our moderators will review
-                  this quiz shortly.
+                  Thank you for keeping LemonQuiz safe. Our moderators will review this quiz.
                 </p>
               </div>
             ) : (
               <form onSubmit={handleSubmitReport} className="space-y-4">
-                {/* Honeypot for report */}
                 <input
                   type="text"
                   name="reportWebsite"
@@ -698,103 +695,62 @@ export function QuizPlayer({
                   aria-hidden="true"
                 />
 
-                {reportError && (
-                  <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>{reportError}</span>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
-                    Reason for report
+                <div className="space-y-2">
+                  <label className="block text-xs font-black uppercase text-[var(--text-secondary)]">
+                    Reason
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <select
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value)}
+                    className="w-full h-12 bg-[var(--input-bg)] border-2 border-[var(--input-border)] text-[var(--text-primary)] font-bold rounded-2xl px-4 text-sm outline-none focus:border-[#FFB830]"
+                  >
                     {REPORT_REASONS.map((r) => (
-                      <label
-                        key={r.value}
-                        className={cn(
-                          "flex items-center gap-2.5 p-3 rounded-xl border text-xs font-semibold cursor-pointer transition-colors min-h-[44px]",
-                          reportReason === r.value
-                            ? "border-violet-500 bg-violet-500/15 text-[var(--text-primary)] ring-1 ring-violet-500/30"
-                            : "border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--text-secondary)] hover:border-violet-500/40",
-                        )}
-                      >
-                        <input
-                          type="radio"
-                          name="reason"
-                          value={r.value}
-                          checked={reportReason === r.value}
-                          onChange={(e) => setReportReason(e.target.value)}
-                          className="sr-only"
-                        />
-                        <span>{r.label}</span>
-                      </label>
+                      <option key={r.value} value={r.value} className="bg-white">
+                        {r.label}
+                      </option>
                     ))}
-                  </div>
+                  </select>
                 </div>
 
-                <div>
-                  <label
-                    htmlFor="report-description"
-                    className="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5"
-                  >
+                <div className="space-y-2">
+                  <label className="block text-xs font-black uppercase text-[var(--text-secondary)]">
                     Additional Details (Optional)
                   </label>
                   <textarea
-                    id="report-description"
-                    rows={2}
                     value={reportDescription}
                     onChange={(e) =>
                       setReportDescription(e.target.value.slice(0, 500))
                     }
-                    placeholder="Provide any additional context..."
+                    placeholder="Briefly describe the issue..."
+                    rows={3}
                     maxLength={500}
-                    className="w-full px-3 py-2 text-xs font-medium rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] focus:border-violet-500 focus:ring-2 focus:ring-violet-500/25 text-[var(--text-primary)] outline-none resize-none"
+                    className="w-full bg-[var(--input-bg)] border-2 border-[var(--input-border)] text-[var(--text-primary)] font-medium rounded-2xl p-4 text-sm outline-none focus:border-[#FFB830]"
                   />
                 </div>
 
-                <p className="text-[10px] text-[var(--text-muted)] text-center">
-                  Protected by reCAPTCHA (
-                  <a
-                    href="https://policies.google.com/privacy"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline hover:text-[var(--text-primary)]"
-                  >
-                    Privacy
-                  </a>
-                  {" · "}
-                  <a
-                    href="https://policies.google.com/terms"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline hover:text-[var(--text-primary)]"
-                  >
-                    Terms
-                  </a>
-                  )
-                </p>
+                {reportError && (
+                  <p className="text-xs font-bold text-rose-400">{reportError}</p>
+                )}
 
-                <div className="flex gap-2.5 pt-2">
-                  <button
+                <div className="flex gap-3 pt-2">
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="md"
+                    className="flex-1"
                     onClick={() => setIsReportOpen(false)}
-                    className="flex-1 min-h-[48px] py-2.5 px-4 rounded-xl border border-[var(--card-border)] text-[var(--text-secondary)] font-bold text-xs hover:bg-violet-500/10 transition-colors cursor-pointer"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
+                    variant="coral"
+                    size="md"
+                    className="flex-1"
                     disabled={isSubmittingReport}
-                    className="flex-1 min-h-[48px] py-2.5 px-4 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-500 transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
-                    {isSubmittingReport ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      "Submit Report"
-                    )}
-                  </button>
+                    {isSubmittingReport ? "Sending..." : "Submit Report"}
+                  </Button>
                 </div>
               </form>
             )}
