@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { ToggleLeft, ToggleRight, Loader2, AlertCircle } from "lucide-react";
 import type { QuizStatus } from "@/types/quiz";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 
 export interface QuizControlsProps {
   quizCode: string;
@@ -27,7 +29,6 @@ export function QuizControls({
     const previousStatus = status;
     const nextStatus: QuizStatus = isLive ? "disabled" : "active";
 
-    // Optimistic UI update
     setStatus(nextStatus);
     setErrorMessage(null);
     setIsUpdating(true);
@@ -51,7 +52,6 @@ export function QuizControls({
       }
     } catch (err: unknown) {
       console.error("Status update error:", err);
-      // Rollback on error
       setStatus(previousStatus);
       const message =
         err instanceof Error ? err.message : "Unable to reach server. Changes rolled back.";
@@ -62,84 +62,68 @@ export function QuizControls({
   };
 
   return (
-    <div className="w-full card-surface rounded-3xl p-5 sm:p-6 space-y-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+    <div className="w-full card-surface rounded-3xl p-5 sm:p-6 space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         {/* Status Presentation */}
         <div className="flex items-center gap-3.5">
           <div
-            className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${
+            className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border-2 ${
               isLive
-                ? "bg-emerald-500/15 border-emerald-500/35 text-emerald-400"
-                : "bg-amber-500/15 border-amber-500/35 text-amber-400"
+                ? "bg-[#10B981]/15 border-[#10B981]/35 text-2xl"
+                : "bg-amber-500/15 border-amber-500/35 text-2xl"
             }`}
           >
-            {isLive ? (
-              <span className="relative flex h-3.5 w-3.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-400"></span>
-              </span>
-            ) : (
-              <span className="inline-flex rounded-full h-3.5 w-3.5 bg-amber-400"></span>
-            )}
+            {isLive ? "🟢" : "⏸️"}
           </div>
 
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base sm:text-lg font-black text-[var(--text-primary)] leading-tight">
-                {isLive ? "Quiz is Live" : "Submissions Paused"}
+                {isLive ? "Quiz is Active" : "Submissions Paused"}
               </h3>
-              <span
-                className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
-                  isLive
-                    ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
-                    : "bg-amber-500/15 border-amber-500/30 text-amber-400"
-                }`}
-              >
+              <Badge variant={isLive ? "mint" : "slate"}>
                 {isLive ? "Accepting Attempts" : "Paused"}
-              </span>
+              </Badge>
             </div>
-            <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] mt-0.5">
+            <p className="text-xs font-semibold text-[var(--text-secondary)] mt-0.5">
               {isLive
-                ? "Friends can open your link, take the quiz, and submit responses."
-                : "Your quiz is temporarily closed. New submissions are blocked."}
+                ? "Anyone with your link can take the quiz and rank."
+                : "New attempts are locked. Old responses are preserved."}
             </p>
           </div>
         </div>
 
-        {/* 56px Touch Target Toggle Button */}
-        <button
+        {/* Toggle Button */}
+        <Button
           type="button"
+          variant={isLive ? "ghost" : "lemon"}
+          size="md"
           onClick={handleToggleStatus}
           disabled={isUpdating}
-          className={`min-h-[56px] py-4 px-6 rounded-2xl border active:scale-[0.98] transition-all font-bold text-sm sm:text-base flex items-center justify-center gap-2.5 cursor-pointer shrink-0 disabled:opacity-60 disabled:cursor-not-allowed ${
-            isLive
-              ? "border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--text-primary)] hover:border-violet-500/50 hover:bg-violet-500/10"
-              : "bg-gradient-to-r from-violet-600 to-indigo-600 border-transparent text-white hover:brightness-110 shadow-md shadow-violet-600/30 glow-purple"
-          }`}
+          className="shrink-0"
         >
           {isUpdating ? (
             <>
-              <Loader2 className="w-5 h-5 animate-spin text-violet-400" />
+              <Loader2 className="w-4 h-4 animate-spin" />
               <span>Updating...</span>
             </>
           ) : isLive ? (
             <>
-              <ToggleRight className="w-6 h-6 text-emerald-400" />
-              <span>Pause Submissions</span>
+              <ToggleRight className="w-5 h-5 text-emerald-400" />
+              <span>Pause Quiz</span>
             </>
           ) : (
             <>
-              <ToggleLeft className="w-6 h-6 text-white/80" />
-              <span>Resume Submissions</span>
+              <ToggleLeft className="w-5 h-5 text-[#2D1B0E]" />
+              <span>Resume Quiz ⚡</span>
             </>
           )}
-        </button>
+        </Button>
       </div>
 
-      {/* Error Notice */}
       {errorMessage && (
-        <div className="flex items-center gap-2 p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/35 text-rose-300 text-xs font-semibold animate-in fade-in duration-200">
-          <AlertCircle className="w-4 h-4 shrink-0" />
+        <div className="p-3.5 rounded-2xl bg-rose-500/15 border-2 border-rose-500/30 text-rose-300 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
           <span>{errorMessage}</span>
         </div>
       )}

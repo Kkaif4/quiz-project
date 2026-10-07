@@ -1,6 +1,13 @@
 import dns from "node:dns";
 import mongoose from "mongoose";
 
+// Ensure Node.js c-ares DNS resolver uses reliable public DNS servers for MongoDB Atlas SRV resolution
+try {
+  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+} catch {
+  // Fail-safe for restricted environments
+}
+
 /**
  * Cache interface to maintain connection pool across
  * hot serverless invocations in Vercel Node.js runtime.
@@ -86,6 +93,10 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
       socketTimeoutMS: 20000,
       lookup: fastLookup as unknown as mongoose.ConnectOptions["lookup"],
     };
+
+    try {
+      dns.setServers(["8.8.8.8", "1.1.1.1"]);
+    } catch {}
 
     cached.promise = mongoose.connect(uri, opts).then((m) => {
       return m;
