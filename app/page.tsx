@@ -30,9 +30,9 @@ export const metadata: Metadata = {
   },
   verification: {
     google: [
+      "n5AkShKw4YoZg6t4zt9dWVtyoSMiILKGoXLicsx4RVI",
       "CzY4LArjfmtusUoJx74s6pssE-zwo4UiT_fJvJGoYLQ",
       "CUJwVLOe6GlodleCrDikkTAsHdO-W4cOzrkScyBEN4M",
-      "n5AkShKw4YoZg6t4zt9dWVtyoSMiILKGoXLicsx4RVI",
     ],
   },
   other: {
@@ -320,7 +320,8 @@ export default function HomePage() {
               Built for Close Friends
             </span>
             <h2 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight">
-              Why Close Friends Love LemonQuiz: Simple, Fast &amp; Ultra-Engaging
+              Why Close Friends Love LemonQuiz: Simple, Fast &amp;
+              Ultra-Engaging
             </h2>
           </div>
 
