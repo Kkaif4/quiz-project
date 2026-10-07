@@ -278,6 +278,10 @@ async function runSeoTests() {
     layoutContent.includes("CUJwVLOe6GlodleCrDikkTAsHdO-W4cOzrkScyBEN4M"),
     "app/layout.tsx must configure DNS verification token in verification.google",
   );
+  assert.ok(
+    layoutContent.includes("n5AkShKw4YoZg6t4zt9dWVtyoSMiILKGoXLicsx4RVI"),
+    "app/layout.tsx must configure DNS verification token in verification.google",
+  );
 
   const homeGoogle = Array.isArray(homeMetadata.verification?.google)
     ? homeMetadata.verification.google
@@ -289,6 +293,10 @@ async function runSeoTests() {
   );
   assert.ok(
     homeGoogle.includes("CUJwVLOe6GlodleCrDikkTAsHdO-W4cOzrkScyBEN4M"),
+    "Homepage metadata must include secondary verification token",
+  );
+  assert.ok(
+    homeGoogle.includes("n5AkShKw4YoZg6t4zt9dWVtyoSMiILKGoXLicsx4RVI"),
     "Homepage metadata must include secondary verification token",
   );
   console.log("  ✔ Google Site Verification meta tags (HTML tag + DNS) configured on root layout and homepage.\n");
