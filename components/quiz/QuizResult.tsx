@@ -149,26 +149,10 @@ export function QuizResult({ result }: QuizResultProps) {
           </Button>
         </Link>
 
-        {/* 2. SECONDARY CTA: Share Result via WhatsApp */}
-        <a
-          href={getWhatsAppShareUrl()}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block"
-        >
-          <Button
-            variant="ghost"
-            size="lg"
-            fullWidth
-            className="bg-[#25D366]/15 border-[#25D366]/50 text-white hover:bg-[#25D366]/25"
-          >
-            <Share2 className="w-5 h-5 text-[#25D366]" />
-            <span>Share Score via WhatsApp 💬</span>
-          </Button>
-        </a>
 
-        {/* 3. TERTIARY ACTIONS: Copy Result Link & Retake Quiz */}
-        <div className="grid grid-cols-2 gap-3 pt-1">
+
+        {/* 3. TERTIARY ACTIONS: Copy Result Link */}
+        <div className="grid grid-cols-1 gap-3 pt-1">
           <Button
             type="button"
             variant="ghost"
@@ -187,13 +171,6 @@ export function QuizResult({ result }: QuizResultProps) {
               </>
             )}
           </Button>
-
-          <Link href={`/q/${result.quizCode}`} className="block">
-            <Button variant="ghost" size="md" fullWidth>
-              <RotateCcw className="w-4 h-4 text-[var(--text-muted)]" />
-              <span>Retake Quiz</span>
-            </Button>
-          </Link>
         </div>
       </div>
     </div>

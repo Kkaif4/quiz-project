@@ -115,7 +115,7 @@ export async function POST(
 
     // 6. Check maxAttemptsPerPerson constraint
     const ipHash = hashIp(clientIp);
-    const maxAttempts = quiz.settings?.maxAttemptsPerPerson ?? 1;
+    const maxAttempts = quiz.settings?.maxAttemptsPerPerson ?? 3;
 
     const existingAttemptsCount = await Attempt.countDocuments({
       quizId: quiz._id,

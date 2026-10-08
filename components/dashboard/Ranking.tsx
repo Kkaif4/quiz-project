@@ -14,6 +14,7 @@ import type { ILeaderboardEntry } from "@/types/quiz";
 import { formatRelativeTime } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { toJpeg } from "html-to-image";
 
 export interface RankingProps {
   leaderboard: ILeaderboardEntry[];
@@ -23,6 +24,8 @@ export interface RankingProps {
 
 export function Ranking({ leaderboard, quizCode, shareUrl }: RankingProps) {
   const [copied, setCopied] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const rankingRef = React.useRef<HTMLDivElement>(null);
   const effectiveShareUrl =
     shareUrl || `${process.env.NEXT_PUBLIC_APP_URL}/q/${quizCode}`;
 
@@ -41,6 +44,50 @@ export function Ranking({ leaderboard, quizCode, shareUrl }: RankingProps) {
   const getWhatsAppShareUrl = () => {
     const text = `Hey squad! 👑 Check out my friendship test — see who can top my live leaderboard: ${effectiveShareUrl}`;
     return `https://wa.me/?text=${encodeURIComponent(text)}`;
+  };
+
+  const handleGenerateImage = async () => {
+    if (!rankingRef.current) return;
+    try {
+      setIsGenerating(true);
+      // Wait a moment for styles to apply if needed
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      
+      const dataUrl = await toJpeg(rankingRef.current, { 
+        quality: 0.95,
+        backgroundColor: '#1E1B4B', // or your theme's dark background color
+        style: { margin: '0' }
+      });
+      
+      // Attempt to use native share API if supported
+      if (navigator.share) {
+        try {
+          const blob = await (await fetch(dataUrl)).blob();
+          const file = new File([blob], 'leaderboard.jpg', { type: 'image/jpeg' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: 'My Quiz Leaderboard',
+              text: `Check out my quiz leaderboard! Create your own at ${process.env.NEXT_PUBLIC_APP_URL || 'lemonquiz.com'}`,
+              files: [file],
+            });
+            return;
+          }
+        } catch (shareErr) {
+          console.error("Error sharing via native API:", shareErr);
+          // Fallback to download
+        }
+      }
+
+      // Fallback: download the image
+      const link = document.createElement('a');
+      link.download = `quiz-leaderboard-${quizCode}.jpg`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Failed to generate image:", err);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const renderRankBadge = (rank: number) => {
@@ -80,7 +127,11 @@ export function Ranking({ leaderboard, quizCode, shareUrl }: RankingProps) {
   };
 
   return (
-    <div className="w-full card-surface rounded-3xl p-5 sm:p-6 space-y-5">
+    <div className="w-full space-y-4">
+      <div 
+        ref={rankingRef} 
+        className="w-full card-surface rounded-3xl p-5 sm:p-6 space-y-5 bg-[var(--bg-primary)] border border-[var(--border-subtle)]"
+      >
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -205,8 +256,39 @@ export function Ranking({ leaderboard, quizCode, shareUrl }: RankingProps) {
               </div>
             );
           })}
+              {/* Download / Share Image Button */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4" data-html2canvas-ignore="true">
+                <Button
+                  type="button"
+                  variant="lemon"
+                  size="md"
+                  onClick={handleGenerateImage}
+                  disabled={isGenerating}
+                  className="w-full sm:w-auto font-black"
+                >
+                  {isGenerating ? (
+                    <span className="flex items-center gap-2">Generating...</span>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 text-[#2D1B0E]" />
+                      <span>Share to Instagram / WhatsApp Status 📸</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+
+            </div>
+          )}
+
+          {/* Watermark/Footer for the exported image */}
+          {leaderboard.length > 0 && (
+            <div className="mt-6 pt-4 border-t-2 border-[var(--border-subtle)] text-center pb-2">
+              <span className="text-xs font-black uppercase tracking-wider text-[var(--text-muted)]">
+                Create your own quiz in 60s at lemonquiz.com
+              </span>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
   );
 }

@@ -59,7 +59,7 @@ export const QuizQuestionSchema = z
 export const QuizSettingsSchema = z.object({
   showScore: z.boolean().default(true),
   showCorrectAnswers: z.boolean().default(false),
-  maxAttemptsPerPerson: z.number().int().min(1).max(10).default(1),
+  maxAttemptsPerPerson: z.number().int().min(1).max(10).default(3),
 });
 
 /**
@@ -109,7 +109,7 @@ export const CreateQuizSchema = z.object({
   settings: QuizSettingsSchema.default({
     showScore: true,
     showCorrectAnswers: false,
-    maxAttemptsPerPerson: 1,
+    maxAttemptsPerPerson: 3,
   }),
   website: z.string().max(0, "Bot detected").optional().nullable(),
   recaptchaToken: z.string().optional().nullable(),

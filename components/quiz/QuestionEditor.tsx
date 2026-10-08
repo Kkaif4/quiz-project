@@ -89,28 +89,38 @@ export function QuestionEditor({
   return (
     <div className="card-surface rounded-3xl p-5 sm:p-7 space-y-5">
       {/* Question Header */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-[#FFB830] text-[#2D1B0E] font-black text-sm shadow-[0_2px_0_#E09800]">
-            {index + 1}
-          </span>
-          <span className="text-xs font-black tracking-wider text-[var(--text-muted)] uppercase">
-            Question {index + 1} of {totalQuestions}
-          </span>
-        </div>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#FFB830] text-[#2D1B0E] font-black text-lg shadow-[0_3px_0_#E09800]">
+              {index + 1}
+            </span>
+            <span className="text-sm sm:text-base font-black tracking-wider text-[var(--text-primary)] uppercase">
+              Question {index + 1} of {totalQuestions}
+            </span>
+          </div>
 
-        {canDeleteQuestion ? (
-          <button
-            type="button"
-            onClick={onDeleteQuestion}
-            className="text-[var(--text-muted)] hover:text-rose-400 p-1.5 rounded-xl hover:bg-rose-500/10 active:scale-95 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
-          >
-            <Trash2 className="w-4 h-4" />
-            <span className="hidden sm:inline">Delete</span>
-          </button>
-        ) : (
-          <Badge variant="slate">Min 3 questions</Badge>
-        )}
+          {canDeleteQuestion ? (
+            <button
+              type="button"
+              onClick={onDeleteQuestion}
+              className="text-[var(--text-muted)] hover:text-rose-400 p-1.5 rounded-xl hover:bg-rose-500/10 active:scale-95 transition-all text-sm font-bold flex items-center gap-1 cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Delete</span>
+            </button>
+          ) : (
+            <Badge variant="slate">Min 3 questions</Badge>
+          )}
+        </div>
+        
+        {/* Progress Line */}
+        <div className="w-full h-2 bg-[var(--card-bg)] rounded-full overflow-hidden border border-[var(--card-border)] shadow-inner">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-[#FFB830] to-[#FF9800] transition-all duration-300 ease-out"
+            style={{ width: `${Math.min(100, Math.round(((index + 1) / totalQuestions) * 100))}%` }}
+          />
+        </div>
       </div>
 
       {/* Question Text Input */}

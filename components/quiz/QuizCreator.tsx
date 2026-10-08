@@ -553,7 +553,7 @@ export function QuizCreator({ initialTemplateId }: QuizCreatorProps) {
             </Button>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-              {questions.length < 15 && (
+              {questions.length < 15 && currentQuestionIndex === questions.length - 1 && (
                 <Button
                   type="button"
                   variant="ghost"
