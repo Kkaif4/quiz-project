@@ -233,3 +233,30 @@
 - **Consequences**:
   - *Positive*: Seamless zero-click protection against headless bots; 0% friction for teenage mobile players; ad-blocker users are not stranded; full test suite automation without live external Google API dependencies.
   - *Negative*: Relies on Google reCAPTCHA v3 backend availability unless fail-open is enabled.
+
+---
+
+### ADR-016: Premium Cozy Visual System & UX Architecture
+
+- **Status**: Accepted
+- **Context**: The original visual theme relied on high-contrast neon/violet gamified styling. The product goal is to establish Lemon Quiz as a premium, warm, social, emotional, and modern friendship experience — evoking cozy morning sunlight on warm stationery paper in light mode, and intimate candlelight atmosphere in dark mode. The aesthetic must feel like a polished mobile product (Instagram/Pinterest tier) rather than a generic SaaS or childish quiz website.
+- **Decision**:
+  1. *Core Color Palette*:
+     - Light Backgrounds: Warm Ivory (`#FFF9F2`), Cream (`#F8EFE3`).
+     - Deep Espresso Typography (`#241C24` primary, `#5C4A5A` secondary, `#8E7B8B` muted) replaces pure black to eliminate harsh contrast and create an artisanal, warm feel.
+     - Brand Accents: Soft Plum (`#6D526F`, `#4B344D`) for interactive elements; Soft Champagne (`#F3D7A4`, `#D1A76A`) for premium conversion CTAs; Dusty Rose (`#D99A9A`) and Soft Lavender (`#B8A5C9`) for friendship moments, emotional badges, and category pills; Sage (`#A8B89A`) for success states.
+     - Cozy Dark Theme: Late-night candlelight palette using `#17131A` (base), `#211A25` (surface), `#2A202D` (card), `#342638` (elevated), with `#FFF8F0` warm text and muted plum/rose accents.
+  2. *Editorial & Sans Typography Pairing*:
+     - Primary Sans: `Plus Jakarta Sans` for clean, modern legibility.
+     - Editorial Accent: `DM Serif Display` (`font-editorial` / `italic`) for boutique headlines, emotive statements, and celebratory trophy screens.
+     - Body Fallback: `Inter` for optimal rendering across international character sets.
+  3. *Tactile Surfaces & Mobile Ergonomics*:
+     - Generous `rounded-2xl` and `rounded-3xl` radii with soft layered shadows (`0 8px 30px rgba(75, 52, 77, 0.08)`).
+     - Minimum 56px touch target heights across all interactive buttons, inputs, option chips, and navigation decks.
+     - Duotone pill icon containers using Lucide React vector icons with zero raw OS emojis.
+  4. *Cozy Micro-Interactions*:
+     - Warm confetti explosion on score reveal with champagne gold, dusty rose, lavender, soft plum, and sage particles.
+     - Smooth stationery radio chips with spring-like selection feedback.
+- **Consequences**:
+  - *Positive*: Unifies brand aesthetic into an emotionally resonant, tactile social product; maintains >14:1 WCAG AAA contrast ratio on body text; preserves all core security, SEO, and zero answer key leakage invariants.
+  - *Negative*: Requires loading Google web fonts `Plus_Jakarta_Sans` and `DM_Serif_Display` (optimized via `next/font/google` zero-layout-shift font variables).

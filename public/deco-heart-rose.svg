@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28" fill="none">
+  <defs>
+    <linearGradient id="roseHeartGrad" x1="4" y1="4" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F2BEBE" />
+      <stop offset="50%" stop-color="#D99A9A" />
+      <stop offset="100%" stop-color="#B87373" />
+    </linearGradient>
+  </defs>
+  
+  <path d="M 14 6 C 11.5 2.5, 5 3.5, 5 9.5 C 5 15.5, 14 23, 14 23 C 14 23, 23 15.5, 23 9.5 C 23 3.5, 16.5 2.5, 14 6 Z" fill="url(#roseHeartGrad)" stroke="#4B344D" stroke-width="1.4" stroke-linejoin="round" />
+  
+  <!-- Subtle inner shine -->
+  <path d="M 8 7 C 6 9, 6 12, 7 14" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round" opacity="0.6" />
+</svg>

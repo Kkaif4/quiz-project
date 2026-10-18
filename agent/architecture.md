@@ -248,3 +248,32 @@ To protect viral write operations from automated botnets and leaderboard polluti
    - Google Terms & Privacy links rendered across review step, player footer, and report modal.
    - `.grecaptcha-badge` set to `z-index: 40 !important` with safe margin to avoid obstructing mobile action docks.
 
+---
+
+## 13. Premium Cozy Visual System & UX Architecture
+
+Lemon Quiz utilizes a custom design token system engineered for an intimate, warm, boutique social experience:
+
+1. **Color Palette & Contrast Tokens**:
+   - **Light Mode (Warm Morning Stationery)**:
+     - Page Background: Warm Ivory (`#FFF9F2`)
+     - Secondary Panels / Cards: Cream (`#F8EFE3`)
+     - Text Primary: Deep Espresso (`#241C24`) (>14:1 contrast ratio)
+     - Text Secondary: Muted Espresso (`#5C4A5A`) / `#8E7B8B`
+     - Brand Primary: Soft Plum (`#6D526F` hover `#4B344D`)
+     - Conversion CTA: Soft Champagne Gold (`#D1A76A` hover `#B88B4E`)
+     - Emotion & Highlights: Dusty Rose (`#D99A9A`), Soft Lavender (`#B8A5C9`), Sage (`#A8B89A`)
+   - **Dark Mode (Warm Late-Night Candlelight)**:
+     - Base Background: `#17131A`
+     - Surface: `#211A25` | Card: `#2A202D` | Elevated: `#342638`
+     - Text: `#FFF8F0` (warm ivory text) | Muted: `#D8CDD5` / `#A99CA8`
+2. **Typography Architecture**:
+   - **Primary Sans**: `Plus Jakarta Sans` (`--font-jakarta`) for crisp modern readability.
+   - **Editorial Serif Accent**: `DM Serif Display` (`--font-editorial` / `font-editorial italic`) for headlines, celebratory quotes, and trophy scores.
+   - **Body Fallback**: `Inter` (`--font-inter`).
+3. **Ergonomic & Mobile Standards**:
+   - Minimum 56px touch target height across all interactive elements (`.btn-primary-cozy`, `.btn-premium-gold`, `.btn-secondary-cream`, option pills, input fields).
+   - Zero raw system OS emojis in UI elements — strictly vector icons via Lucide React inside duotone pill badges.
+   - Tactile feedback: Subtle scale transitions (`active:scale-[0.98]`) and soft layered elevation (`0 8px 30px rgba(75, 52, 77, 0.08)`).
+
+

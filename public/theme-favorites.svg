@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+  <defs>
+    <linearGradient id="favBg" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#EFF5EC" />
+      <stop offset="100%" stop-color="#DAE7D5" />
+    </linearGradient>
+    <linearGradient id="starGrad" x1="14" y1="12" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FCE8A2" />
+      <stop offset="100%" stop-color="#D1A76A" />
+    </linearGradient>
+    <linearGradient id="sageLeaf" x1="26" y1="20" x2="38" y2="34" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#C2D1B6" />
+      <stop offset="100%" stop-color="#889C79" />
+    </linearGradient>
+  </defs>
+
+  <!-- Container Pill -->
+  <rect x="2" y="2" width="44" height="44" rx="14" fill="url(#favBg)" stroke="#A8B89A" stroke-width="1.5" />
+
+  <!-- 5-Point Star -->
+  <path d="M 24 12 L 27.5 19.5 L 35.5 20.5 L 29.5 26 L 31 34 L 24 30 L 17 34 L 18.5 26 L 12.5 20.5 L 20.5 19.5 Z" fill="url(#starGrad)" stroke="#4B344D" stroke-width="1.5" stroke-linejoin="round" />
+
+  <!-- Botanical Sage Twig in Corner -->
+  <path d="M 28 26 C 33 24, 38 29, 36 34 C 33 37, 28 32, 28 26 Z" fill="url(#sageLeaf)" stroke="#2D3B26" stroke-width="1.2" opacity="0.85" />
+</svg>

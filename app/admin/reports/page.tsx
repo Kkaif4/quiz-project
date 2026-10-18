@@ -32,6 +32,7 @@ import type {
   AdminReportsResponse,
 } from "@/types/quiz";
 import { cn, formatRelativeTime } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const FILTER_TABS = [
   { id: "pending", label: "Pending" },
@@ -118,30 +119,26 @@ export default function AdminReportsPage() {
 
   // Restore session key on mount
   useEffect(() => {
-    let ignore = false;
-
-    const restoreSession = async () => {
-      const savedKey = sessionStorage.getItem("lemon_admin_key");
-      if (savedKey && !ignore) {
-        setAdminKey(savedKey);
-        setIsUnlocked(true);
-        await fetchReports(savedKey, "pending", 1);
+    try {
+      const storedKey = sessionStorage.getItem("lemon_admin_key");
+      if (storedKey) {
+        queueMicrotask(() => {
+          setAdminKey(storedKey);
+          setIsUnlocked(true);
+          fetchReports(storedKey, "pending", 1);
+        });
       }
-    };
-
-    restoreSession();
-
-    return () => {
-      ignore = true;
-    };
+    } catch {
+      // sessionStorage unavailable
+    }
   }, [fetchReports]);
 
-  // Handle unlock form submission
+  // Handle key unlock submission
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = inputKey.trim();
     if (!trimmed) {
-      setAuthError("Please enter your administrative secret key.");
+      setAuthError("Please enter your admin secret key.");
       return;
     }
 
@@ -291,62 +288,69 @@ export default function AdminReportsPage() {
         return {
           label: "Spam / Scam",
           icon: AlertCircle,
-          pillClass: "bg-amber-500/15 text-amber-300 border-amber-500/35",
+          pillClass: "bg-[#E6C88A]/25 text-[#8A5B17] border-[#E6C88A]/50",
         };
       case "harassment":
         return {
           label: "Harassment",
           icon: ShieldAlert,
-          pillClass: "bg-rose-500/15 text-rose-300 border-rose-500/35",
-        };
-      case "sexual":
-        return {
-          label: "Inappropriate / Sexual",
-          icon: ShieldAlert,
-          pillClass: "bg-purple-500/15 text-purple-300 border-purple-500/35",
+          pillClass: "bg-rose-500/10 text-rose-500 border-rose-500/30",
         };
       case "hate":
         return {
           label: "Hate Speech",
-          icon: Ban,
-          pillClass: "bg-red-500/15 text-red-300 border-red-500/35",
+          icon: ShieldAlert,
+          pillClass: "bg-rose-500/15 text-rose-600 border-rose-500/40",
+        };
+      case "sexual":
+        return {
+          label: "Inappropriate Content",
+          icon: ShieldAlert,
+          pillClass: "bg-rose-500/15 text-rose-600 border-rose-500/40",
         };
       case "impersonation":
         return {
           label: "Impersonation",
           icon: Users,
-          pillClass: "bg-indigo-500/15 text-indigo-300 border-indigo-500/35",
+          pillClass: "bg-[var(--accent-lavender)]/20 text-[var(--accent-plum)] border-[var(--accent-lavender)]/35",
         };
       case "other":
       default:
         return {
           label: "Other Violation",
-          icon: HelpCircle,
-          pillClass: "bg-violet-500/15 text-violet-300 border-violet-500/30",
+          icon: AlertCircle,
+          pillClass: "bg-[var(--surface)] text-[var(--text-secondary)] border-[var(--border-subtle)]",
         };
     }
   };
 
-  // Helper for report status badge
+  // Helper for report status styling
   const getStatusConfig = (status: ReportStatus) => {
     switch (status) {
       case "pending":
         return {
           label: "Pending",
           icon: AlertCircle,
-          pillClass: "bg-amber-500/15 text-amber-300 border-amber-500/35",
+          pillClass: "bg-[#E6C88A]/25 text-[#8A5B17] border-[#E6C88A]/50",
         };
       case "reviewed":
         return {
-          label: "Reviewed",
-          icon: Eye,
-          pillClass: "bg-sky-500/15 text-sky-300 border-sky-500/35",
+          label: "Reviewed / Dismissed",
+          icon: Check,
+          pillClass: "bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border-subtle)]",
         };
       case "resolved":
         return {
           label: "Resolved",
           icon: CheckCircle2,
-          pillClass: "bg-emerald-500/15 text-emerald-300 border-emerald-500/35",
+          pillClass: "bg-[var(--accent-sage)]/15 text-[var(--accent-sage)] border-[var(--accent-sage)]/35",
+        };
+      case "dismissed":
+      default:
+        return {
+          label: "Dismissed",
+          icon: X,
+          pillClass: "bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border-subtle)]",
         };
     }
   };
@@ -355,10 +359,9 @@ export default function AdminReportsPage() {
   if (!isUnlocked) {
     return (
       <div className="min-h-screen text-[var(--text-primary)] flex flex-col justify-center items-center px-4 py-12">
-        <div className="w-full max-w-md card-surface rounded-3xl p-6 sm:p-8 space-y-6 shadow-[0_12px_45px_rgb(0,0,0,0.25)] border border-[var(--card-border)] glow-purple">
+        <div className="w-full max-w-md card-cozy rounded-3xl p-6 sm:p-8 space-y-6 text-center">
           <div className="text-center space-y-3">
-            {/* Rule 4: Lucide icon inside duotone container pill */}
-            <div className="w-16 h-16 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto shadow-xs">
+            <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/25 text-rose-500 flex items-center justify-center mx-auto shadow-xs">
               <ShieldAlert className="w-8 h-8" />
             </div>
 
@@ -381,7 +384,7 @@ export default function AdminReportsPage() {
                 Administrative Secret Key
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-violet-400">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[var(--accent-plum)]">
                   <Lock className="w-5 h-5" />
                 </div>
                 <input
@@ -395,23 +398,22 @@ export default function AdminReportsPage() {
                   placeholder="Enter secret key..."
                   autoFocus
                   required
-                  className="w-full pl-12 pr-4 py-4 rounded-2xl bg-[var(--input-bg)] border border-[var(--input-border)] focus:border-violet-500 focus:ring-2 focus:ring-violet-500/25 text-[var(--text-primary)] font-mono text-sm placeholder:font-sans placeholder:text-[var(--text-muted)] outline-none transition-all min-h-[56px]"
+                  className="w-full pl-12 pr-4 py-4 rounded-2xl bg-[var(--input-bg)] border border-[var(--input-border)] focus:border-[var(--accent-plum)] focus:ring-2 focus:ring-[var(--accent-plum)]/20 text-[var(--text-primary)] font-mono text-sm placeholder:font-sans placeholder:text-[var(--text-muted)] outline-none transition-all min-h-[56px]"
                 />
               </div>
 
               {authError && (
-                <div className="mt-2.5 flex items-center gap-1.5 p-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-rose-300 text-xs font-semibold">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
+                <div className="mt-2.5 flex items-center gap-1.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs font-semibold">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
                   <span>{authError}</span>
                 </div>
               )}
             </div>
 
-            {/* Rule 4: Minimum 56px touch target, active tactile scaling */}
             <button
               type="submit"
               disabled={isAuthenticating}
-              className="w-full min-h-[56px] py-4 px-6 rounded-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white font-black text-base shadow-lg shadow-violet-600/30 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 glow-purple"
+              className="btn-primary-cozy w-full"
             >
               {isAuthenticating ? (
                 <>
@@ -456,7 +458,7 @@ export default function AdminReportsPage() {
           </Link>
 
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shadow-xs">
+            <div className="w-8 h-8 rounded-xl bg-rose-500/10 border border-rose-500/25 flex items-center justify-center text-rose-500 shadow-xs">
               <ShieldAlert className="w-4 h-4" />
             </div>
             <span className="font-extrabold text-[var(--text-primary)] tracking-tight text-base sm:text-lg">
@@ -465,23 +467,24 @@ export default function AdminReportsPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <button
               type="button"
               onClick={() => fetchReports(adminKey, statusFilter, page)}
               disabled={isLoading}
               title="Refresh reports"
               aria-label="Refresh reports"
-              className="p-2.5 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] hover:bg-violet-500/10 active:scale-[0.98] transition-all text-[var(--text-primary)] cursor-pointer shadow-xs disabled:opacity-50"
+              className="p-2.5 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] hover:bg-[var(--accent-plum)]/10 active:scale-[0.98] transition-all text-[var(--text-primary)] cursor-pointer shadow-xs disabled:opacity-50"
             >
               <RefreshCw
-                className={cn("w-4 h-4", isLoading && "animate-spin")}
+                className={cn("w-4 h-4", isLoading && "animate-spin text-[var(--accent-plum)]")}
               />
             </button>
             <button
               type="button"
               onClick={handleLock}
               title="Lock console"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/25 text-violet-300 text-xs font-bold active:scale-[0.98] transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[var(--accent-plum)]/10 hover:bg-[var(--accent-plum)]/20 border border-[var(--accent-plum)]/20 text-[var(--accent-plum)] text-xs font-bold active:scale-[0.98] transition-all cursor-pointer"
             >
               <Lock className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Lock</span>
@@ -494,8 +497,8 @@ export default function AdminReportsPage() {
       <main className="max-w-4xl mx-auto px-4 pt-6 sm:pt-8 space-y-6">
         {/* Header Title Section */}
         <div className="space-y-1.5">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/35 text-rose-300 text-xs font-bold shadow-xs">
-            <ShieldAlert className="w-3.5 h-3.5" />
+          <div className="pill-badge">
+            <ShieldAlert className="w-3.5 h-3.5 text-rose-500" />
             <span>Content Safety &amp; Abuse Reports</span>
           </div>
 
@@ -519,8 +522,8 @@ export default function AdminReportsPage() {
                 className={cn(
                   "min-h-[44px] px-4 py-2 rounded-xl font-bold text-xs sm:text-sm tracking-tight transition-all active:scale-[0.98] cursor-pointer whitespace-nowrap",
                   isActive
-                    ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-xs glow-purple"
-                    : "card-surface text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-violet-500/40",
+                    ? "bg-[var(--accent-plum)] text-white shadow-xs"
+                    : "card-cozy text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
                 )}
               >
                 <span>{tab.label}</span>
@@ -536,15 +539,15 @@ export default function AdminReportsPage() {
 
         {/* Global Error Banner */}
         {errorMessage && (
-          <div className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/35 text-rose-300 text-xs sm:text-sm font-semibold flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs sm:text-sm font-semibold flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 shrink-0" />
+              <AlertCircle className="w-5 h-5 shrink-0 text-rose-500" />
               <span>{errorMessage}</span>
             </div>
             <button
               type="button"
               onClick={() => fetchReports(adminKey, statusFilter, page)}
-              className="underline font-bold hover:text-rose-200 ml-4 cursor-pointer"
+              className="underline font-bold hover:text-rose-700 ml-4 cursor-pointer"
             >
               Retry
             </button>
@@ -557,15 +560,15 @@ export default function AdminReportsPage() {
             {[1, 2, 3].map((n) => (
               <div
                 key={n}
-                className="card-surface rounded-3xl p-6 space-y-4 animate-pulse shadow-xs"
+                className="card-cozy rounded-3xl p-6 space-y-4 animate-pulse"
               >
                 <div className="flex items-center justify-between">
-                  <div className="w-28 h-6 bg-violet-500/15 rounded-full" />
-                  <div className="w-20 h-5 bg-violet-500/15 rounded-full" />
+                  <div className="w-28 h-6 bg-[var(--accent-plum)]/10 rounded-full" />
+                  <div className="w-20 h-5 bg-[var(--accent-plum)]/10 rounded-full" />
                 </div>
-                <div className="w-3/4 h-5 bg-violet-500/15 rounded-lg" />
-                <div className="w-full h-16 bg-violet-500/10 rounded-2xl" />
-                <div className="w-full h-14 bg-violet-500/15 rounded-2xl" />
+                <div className="w-3/4 h-5 bg-[var(--accent-plum)]/10 rounded-lg" />
+                <div className="w-full h-16 bg-[var(--accent-plum)]/5 rounded-2xl" />
+                <div className="w-full h-14 bg-[var(--accent-plum)]/10 rounded-2xl" />
               </div>
             ))}
           </div>
@@ -573,8 +576,8 @@ export default function AdminReportsPage() {
 
         {/* Empty State */}
         {!isLoading && reports.length === 0 && (
-          <div className="card-surface rounded-3xl p-8 sm:p-12 text-center space-y-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto shadow-xs">
+          <div className="card-cozy rounded-3xl p-8 sm:p-12 text-center space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-[var(--accent-sage)]/15 border border-[var(--accent-sage)]/30 text-[var(--accent-sage)] flex items-center justify-center mx-auto shadow-xs">
               <CheckCircle2 className="w-7 h-7" />
             </div>
             <div className="space-y-1">
@@ -591,7 +594,7 @@ export default function AdminReportsPage() {
               <button
                 type="button"
                 onClick={() => handleFilterChange("all")}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] hover:bg-violet-500/10 active:scale-[0.98] transition-all text-xs font-bold text-[var(--text-primary)] cursor-pointer"
+                className="btn-secondary-cream"
               >
                 <span>View All Reports</span>
               </button>
@@ -614,7 +617,7 @@ export default function AdminReportsPage() {
               return (
                 <div
                   key={report.id}
-                  className="card-surface rounded-3xl p-5 sm:p-7 space-y-5 shadow-[0_4px_20px_rgb(0,0,0,0.1)] transition-all"
+                  className="card-cozy rounded-3xl p-5 sm:p-7 space-y-5 transition-all"
                 >
                   {/* Top Bar: Reason Badge + Status Badge + Timestamp */}
                   <div className="flex flex-wrap items-center justify-between gap-2.5">
@@ -652,8 +655,8 @@ export default function AdminReportsPage() {
                     <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
                       Reporter Comments
                     </span>
-                    <div className="p-3.5 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-start gap-2.5">
-                      <FileText className="w-4 h-4 text-violet-400 mt-0.5 shrink-0" />
+                    <div className="p-3.5 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] flex items-start gap-2.5">
+                      <FileText className="w-4 h-4 text-[var(--accent-plum)] mt-0.5 shrink-0" />
                       <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] leading-relaxed break-words">
                         {report.description
                           ? report.description
@@ -669,7 +672,7 @@ export default function AdminReportsPage() {
                     </span>
 
                     {report.quiz ? (
-                      <div className="p-4 rounded-2xl border border-[var(--card-border)] bg-violet-500/5 space-y-3">
+                      <div className="p-4 rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] space-y-3">
                         <div className="flex flex-wrap items-start justify-between gap-2">
                           <div className="space-y-1 min-w-0 pr-2">
                             <h3 className="text-base sm:text-lg font-black text-[var(--text-primary)] tracking-tight leading-snug break-words">
@@ -681,7 +684,7 @@ export default function AdminReportsPage() {
                                 href={`/q/${report.quiz.code}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-violet-400 hover:text-violet-300 underline font-sans font-semibold cursor-pointer"
+                                className="inline-flex items-center gap-1 text-[var(--accent-plum)] hover:underline font-sans font-semibold cursor-pointer"
                               >
                                 <span>Preview</span>
                                 <ExternalLink className="w-3 h-3" />
@@ -694,8 +697,8 @@ export default function AdminReportsPage() {
                             className={cn(
                               "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shrink-0",
                               report.quiz.status === "active"
-                                ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/35"
-                                : "bg-rose-500/15 text-rose-400 border-rose-500/35",
+                                ? "bg-[var(--accent-sage)]/15 text-[var(--accent-sage)] border-[var(--accent-sage)]/35"
+                                : "bg-rose-500/10 text-rose-500 border-rose-500/30",
                             )}
                           >
                             {report.quiz.status === "active" ? (
@@ -715,24 +718,24 @@ export default function AdminReportsPage() {
                         {/* Quiz Metrics (Views, Attempts, Questions) */}
                         <div className="flex flex-wrap items-center gap-3 pt-1 text-xs font-semibold text-[var(--text-secondary)]">
                           <div className="flex items-center gap-1.5">
-                            <Eye className="w-3.5 h-3.5 text-violet-400" />
+                            <Eye className="w-3.5 h-3.5 text-[var(--accent-plum)]" />
                             <span>{report.quiz.stats.views} Views</span>
                           </div>
-                          <div className="w-1 h-1 rounded-full bg-violet-400/40" />
+                          <div className="w-1 h-1 rounded-full bg-[var(--border-subtle)]" />
                           <div className="flex items-center gap-1.5">
-                            <Users className="w-3.5 h-3.5 text-violet-400" />
+                            <Users className="w-3.5 h-3.5 text-[var(--accent-plum)]" />
                             <span>{report.quiz.stats.attempts} Attempts</span>
                           </div>
-                          <div className="w-1 h-1 rounded-full bg-violet-400/40" />
+                          <div className="w-1 h-1 rounded-full bg-[var(--border-subtle)]" />
                           <div className="flex items-center gap-1.5">
-                            <HelpCircle className="w-3.5 h-3.5 text-violet-400" />
+                            <HelpCircle className="w-3.5 h-3.5 text-[var(--accent-plum)]" />
                             <span>{report.quiz.questionsCount} Questions</span>
                           </div>
                         </div>
                       </div>
                     ) : (
-                      <div className="p-3.5 rounded-2xl bg-violet-500/10 border border-violet-500/20 text-xs font-medium text-[var(--text-muted)] flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 text-violet-400 shrink-0" />
+                      <div className="p-3.5 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] text-xs font-medium text-[var(--text-muted)] flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-[var(--accent-plum)] shrink-0" />
                         <span>Quiz was deleted or no longer exists in database.</span>
                       </div>
                     )}
@@ -744,8 +747,8 @@ export default function AdminReportsPage() {
                       className={cn(
                         "p-3 rounded-xl border text-xs font-semibold flex items-center gap-2",
                         feedback.type === "success"
-                          ? "bg-emerald-500/15 border-emerald-500/35 text-emerald-300"
-                          : "bg-rose-500/15 border-rose-500/35 text-rose-300",
+                          ? "bg-[var(--accent-sage)]/15 border-[var(--accent-sage)]/35 text-[var(--accent-sage)]"
+                          : "bg-rose-500/10 border-rose-500/30 text-rose-500",
                       )}
                     >
                       {feedback.type === "success" ? (
@@ -757,7 +760,7 @@ export default function AdminReportsPage() {
                     </div>
                   )}
 
-                  {/* Moderation Actions Deck (Strict Rule 4: min 56px touch target buttons, active tactile scaling) */}
+                  {/* Moderation Actions Deck */}
                   <div className="pt-2 border-t border-[var(--border-subtle)]">
                     <span className="block text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-2.5">
                       Moderation Actions
@@ -772,12 +775,12 @@ export default function AdminReportsPage() {
                           onClick={() =>
                             handleModerationAction(report.id, "disable_quiz")
                           }
-                          className="min-h-[56px] px-4 py-3 rounded-2xl bg-rose-500/15 border border-rose-500/35 text-rose-300 hover:bg-rose-500/25 font-bold text-xs sm:text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                          className="min-h-[56px] px-4 py-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-500 hover:bg-rose-500/20 font-bold text-xs sm:text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                         >
                           {isWorking ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
-                            <ShieldOff className="w-4 h-4 text-rose-400" />
+                            <ShieldOff className="w-4 h-4 text-rose-500" />
                           )}
                           <span>Disable Quiz</span>
                         </button>
@@ -788,12 +791,12 @@ export default function AdminReportsPage() {
                           onClick={() =>
                             handleModerationAction(report.id, "activate_quiz")
                           }
-                          className="min-h-[56px] px-4 py-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 hover:bg-emerald-500/25 font-bold text-xs sm:text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                          className="min-h-[56px] px-4 py-3 rounded-2xl bg-[var(--accent-sage)]/15 border border-[var(--accent-sage)]/35 text-[var(--accent-sage)] hover:bg-[var(--accent-sage)]/25 font-bold text-xs sm:text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                         >
                           {isWorking ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                            <CheckCircle2 className="w-4 h-4 text-[var(--accent-sage)]" />
                           )}
                           <span>Activate Quiz</span>
                         </button>
@@ -809,14 +812,14 @@ export default function AdminReportsPage() {
                         className={cn(
                           "min-h-[56px] px-4 py-3 rounded-2xl font-bold text-xs sm:text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50",
                           report.status === "resolved"
-                            ? "bg-violet-500/10 text-[var(--text-muted)] border border-violet-500/20 cursor-not-allowed"
-                            : "bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:brightness-110 shadow-md shadow-violet-600/25 glow-purple",
+                            ? "bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--border-subtle)] cursor-not-allowed"
+                            : "btn-primary-cozy",
                         )}
                       >
                         {isWorking ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          <Check className="w-4 h-4 text-emerald-300" />
+                          <Check className="w-4 h-4 text-white" />
                         )}
                         <span>
                           {report.status === "resolved"
@@ -833,10 +836,8 @@ export default function AdminReportsPage() {
                           handleModerationAction(report.id, "dismiss")
                         }
                         className={cn(
-                          "min-h-[56px] px-4 py-3 rounded-2xl border font-semibold text-xs sm:text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50",
-                          report.status === "reviewed"
-                            ? "border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--text-muted)] cursor-not-allowed"
-                            : "border-[var(--card-border)] bg-[var(--card-bg)] hover:bg-violet-500/10 text-[var(--text-primary)]",
+                          "btn-secondary-cream min-h-[56px] px-4 py-3 font-semibold text-xs sm:text-sm disabled:opacity-50",
+                          report.status === "reviewed" && "cursor-not-allowed text-[var(--text-muted)]",
                         )}
                       >
                         {isWorking ? (
@@ -857,9 +858,9 @@ export default function AdminReportsPage() {
                           href={`/q/${report.quiz.code}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="min-h-[56px] px-4 py-3 rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] hover:bg-violet-500/10 font-semibold text-xs sm:text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-[var(--text-primary)]"
+                          className="btn-secondary-cream min-h-[56px] px-4 py-3 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2"
                         >
-                          <ExternalLink className="w-4 h-4 text-violet-400" />
+                          <ExternalLink className="w-4 h-4 text-[var(--accent-plum)]" />
                           <span>Open Quiz</span>
                         </Link>
                       ) : (
@@ -882,7 +883,7 @@ export default function AdminReportsPage() {
               type="button"
               disabled={page <= 1 || isLoading}
               onClick={() => handlePageChange(page - 1)}
-              className="min-h-[56px] px-5 rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] hover:bg-violet-500/10 active:scale-[0.98] transition-all text-xs sm:text-sm font-bold text-[var(--text-primary)] flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+              className="btn-secondary-cream min-h-[56px] px-5 flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Previous</span>
@@ -896,7 +897,7 @@ export default function AdminReportsPage() {
               type="button"
               disabled={page >= totalPages || isLoading}
               onClick={() => handlePageChange(page + 1)}
-              className="min-h-[56px] px-5 rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] hover:bg-violet-500/10 active:scale-[0.98] transition-all text-xs sm:text-sm font-bold text-[var(--text-primary)] flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+              className="btn-secondary-cream min-h-[56px] px-5 flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <span>Next</span>
               <ChevronRight className="w-4 h-4" />

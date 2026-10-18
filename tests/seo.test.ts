@@ -138,8 +138,8 @@ async function runSeoTests() {
   console.log("▶ [TEST 5] Testing Web App Manifest (app/manifest.ts)...");
   const manifestData = manifest();
   assert.strictEqual(manifestData.short_name, "LemonQuiz");
-  assert.strictEqual(manifestData.theme_color, "#8B5CF6");
-  assert.strictEqual(manifestData.background_color, "#080816");
+  assert.strictEqual(manifestData.theme_color, "#6D526F");
+  assert.strictEqual(manifestData.background_color, "#FFF9F2");
   assert.strictEqual(manifestData.display, "standalone");
   assert.ok(manifestData.icons && manifestData.icons.length > 0, "Manifest must declare icons");
   console.log("  ✔ Web App Manifest correctly configured for mobile PWA indexing.\n");
