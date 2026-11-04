@@ -24,6 +24,13 @@ export const metadata: Metadata = {
   description:
     "Create your personalized friendship test in 60 seconds, share with friends, and see who knows you best.",
   keywords: [
+    "quize",
+    "lemon quize meniac",
+    "lemon quize maniac",
+    "lemon quiz maniac",
+    "lemonquize",
+    "lemon quiz",
+    "lemonquiz",
     "friendship quiz",
     "bff test 2026",
     "how well do your friends know you",
@@ -31,6 +38,16 @@ export const metadata: Metadata = {
     "buddy meter",
     "dare quiz 2026",
     "trivia for friends",
+    "buzzfeed quizzes",
+    "quotev friendship quiz",
+    "uquiz bff",
+    "sporcle friends",
+    "hola quiz",
+    "mate quiz",
+    "fun quizzes for friends",
+    "friendship dare",
+    "true or false best friend",
+    "custom quiz maker",
   ],
   authors: [{ name: "LemonQuiz" }],
   creator: "LemonQuiz",
@@ -70,6 +87,7 @@ export const metadata: Metadata = {
   },
   verification: {
     google: [
+      "n5AkShKw4YoZg6t4zt9dWVtyoSMiILKGoXLicsx4RVI",
       "CzY4LArjfmtusUoJx74s6pssE-zwo4UiT_fJvJGoYLQ",
       "CUJwVLOe6GlodleCrDikkTAsHdO-W4cOzrkScyBEN4M",
     ],
