@@ -57,7 +57,7 @@ const fetchPublicQuizByCode = cache(
       settings: {
         showScore: quiz.settings?.showScore ?? true,
         showCorrectAnswers: quiz.settings?.showCorrectAnswers ?? false,
-        maxAttemptsPerPerson: quiz.settings?.maxAttemptsPerPerson ?? 1,
+        maxAttemptsPerPerson: quiz.settings?.maxAttemptsPerPerson ?? 3,
       },
       stats: {
         attempts: quiz.stats?.attempts ?? 0,

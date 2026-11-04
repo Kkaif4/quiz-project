@@ -42,16 +42,16 @@ export function FaqSection() {
   return (
     <section className="space-y-6 pt-4 max-w-2xl mx-auto w-full">
       <div className="text-center space-y-2">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/15 border border-violet-500/30 text-violet-300 text-xs font-bold shadow-xs">
-          <HelpCircle className="w-3.5 h-3.5 text-violet-400" />
-          <span>Got Questions?</span>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#B47AFF]/15 border border-[#B47AFF]/30 text-[#8B50E0] text-xs font-bold shadow-xs">
+          <HelpCircle className="w-3.5 h-3.5 text-[#B47AFF]" />
+          <span>Got Questions? 💭</span>
         </div>
         <h2 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight">
-          Frequently Asked Questions
+          Frequently Asked Questions 🤔
         </h2>
         <p className="text-xs sm:text-sm font-medium text-[var(--text-secondary)] max-w-md mx-auto">
           Everything you need to know about creating, sharing, and playing
-          LemonQuiz with your squad.
+          LemonQuiz with your squad. ✨
         </p>
       </div>
 
@@ -59,13 +59,13 @@ export function FaqSection() {
         {FAQ_ITEMS.map((item, index) => (
           <details
             key={index}
-            className="group card-surface rounded-2xl border border-[var(--card-border)] overflow-hidden transition-all duration-200 open:border-violet-500/40 glow-purple"
+            className="group card-surface rounded-2xl border border-[var(--card-border)] overflow-hidden transition-all duration-200 open:border-[#B47AFF]/40"
           >
             <summary className="flex items-center justify-between gap-4 p-4 sm:p-5 min-h-[56px] cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none">
               <span className="font-bold text-sm sm:text-base text-[var(--text-primary)] text-left leading-snug">
                 {item.question}
               </span>
-              <div className="w-8 h-8 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center shrink-0 text-violet-300 transition-transform duration-200 group-open:rotate-180">
+              <div className="w-8 h-8 rounded-xl bg-[#B47AFF]/15 border border-[#B47AFF]/25 flex items-center justify-center shrink-0 text-[#B47AFF] transition-transform duration-200 group-open:rotate-180">
                 <ChevronDown className="w-4 h-4" />
               </div>
             </summary>
